@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+    {% block content %}
+    <div class="row">
+      <div class="large-12 columns">
+        <h1>MicroFilters</h1>
+      </div>
+       <hr>
+    </div>
+
+    <div class="row">
+        <form method="POST" action="/download/" enctype="multipart/form-data" target="_blank">
+        {% csrf_token %}
+          <div class="row">
+            <div class="large-8 columns">
+              <label>Data Source:</label>
+              <input accept=".json, .csv" type="file" id="data-file" name="data-file">
+            </div>
+          </div>
+          <hr>
+          <div class="row">
+            <button type="submit" class="large-12 large-centered button">Generate Files</button>
+          </div>
+        </form>
+    </div>
+  {% endblock %}
