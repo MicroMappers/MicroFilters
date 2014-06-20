@@ -1,9 +1,14 @@
-import json, csv, time
+import json, csv, time, urllib2
 from django.http import HttpResponse
 import os
 
-def generateData(dataFile):
-	name, extension = os.path.splitext(dataFile.name)
+def generateData(dataFile, source):
+	if source == "file":
+		extension = getFileExtension(dataFile)
+	elif source == "url":
+		dataFile, extension = fetchFileFromURL(dataFile)
+		if dataFile == 'error':
+			return HttpResponse("{'status': 400, 'error_message': 'URL does not have a csv of json endpoint' }",status=400, content_type="application/json")
 	data = []
 	if extension == ".json":
 		datarow = {}
@@ -50,3 +55,16 @@ def writeFile(data):
 		writer.writerow(row)
 
 	return response
+
+def fetchFileFromURL(url):
+	response = urllib2.urlopen(url)
+	if response.headers.type == 'application/json':
+		return response, '.json'
+	elif response.headers.type == 'text/csv':
+		return response, '.csv' 
+	else:
+		return 'error', 'error'
+
+def getFileExtension(dataFile):
+		dataFileName, extension = os.path.splitext(dataFile.name)
+		return extension

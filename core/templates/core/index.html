@@ -11,9 +11,16 @@
         <form method="POST" action="/download/" enctype="multipart/form-data" target="_blank">
         {% csrf_token %}
           <div class="row">
-            <div class="large-8 columns">
-              <label>Data Source:</label>
-              <input accept=".json, .csv" type="file" id="data-file" name="data-file">
+            <div class="large-12 columns">
+              <div class="row">
+              <div class="large-2 columns">
+                <label>Data Source:</label>
+              </div>
+              <div class="large-10 columns">
+                <input type="text" id="data-url" name="data-url" placeholder="http://your/url/here" size='50'> -or-
+                <input accept=".json, .csv" type="file" id="data-file" name="data-file">
+              </div>
+              </div>
             </div>
           </div>
           <hr>
