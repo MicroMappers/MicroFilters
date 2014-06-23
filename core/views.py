@@ -18,7 +18,8 @@ def downloadPage(request):
 # Fetch the applist from AIDR API
 # CORS issue, can't fetch directly from front-end
 def getAppList(request):
-	appList = urllib2.urlopen("http://pybossa-dev.qcri.org/AIDRTrainerAPI/rest/deployment/active")
-	if appList.code == 200:
+	try:
+		appList = urllib2.urlopen("http://pybossa-dev.qcri.org/AIDRTrainerAPI/rest/deployment/active")
 		return HttpResponse(appList.read(), status=200)
-	return HttpResponse("{ 'status': 500, 'error_message': 'Could not fetch the App List, try again later' }")
+	except:
+		return HttpResponse("{ 'status': 500, 'error_message': 'Could not fetch the App List, try again later' }", content_type="application/json")

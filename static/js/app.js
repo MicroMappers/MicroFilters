@@ -8,6 +8,8 @@ $(document).ready(
 
 		  });
 		  $("#app-list").append(items);
-		});
+		}).fail(function() {
+    		$("#app-list").parent().append("<b>Could not fetch app list</b>");
+  		});
 	}
 	);
