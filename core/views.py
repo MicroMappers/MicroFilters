@@ -20,6 +20,14 @@ def downloadPage(request):
 def getAppList(request):
 	try:
 		appList = urllib2.urlopen("http://pybossa-dev.qcri.org/AIDRTrainerAPI/rest/deployment/active")
-		return HttpResponse(appList.read(), status=200)
+		responseString = appList.read()
+		
+		#backup the applist locally
+		appListFile = open('static/fallback/applist.json', 'w')
+		appListFile.write(responseString)
+		appListFile.close()
+
+		return HttpResponse(responseString, status=200, content_type="application/json")
 	except:
-		return HttpResponse("{ 'status': 500, 'error_message': 'Could not fetch the App List, try again later' }", content_type="application/json")
+		appList = urllib2.urlopen("http://localhost:8000/static/fallback/applist.json")
+		return HttpResponse(appList.read(), status=200, content_type="application/json")
