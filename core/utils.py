@@ -34,7 +34,7 @@ def processJSONInput(dataFile, app):
 	
 	for index, row in enumerate(jsonObject):
 		datarow = {}
-		if row["tweetID"] in tweetIds:
+		if row.get("id") in tweetIds:
 			lineModifier = lineModifier + 1
 			continue
 
