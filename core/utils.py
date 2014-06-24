@@ -11,10 +11,10 @@ def generateData(dataFile, app, source):
 			return HttpResponse("{'status': 400, 'error_message': 'URL does not have a csv of json endpoint' }", status=400, content_type="application/json")
 	
 	sha256_hash = str(hashfile(dataFile, hashlib.sha256()))
-	if ProcessedFile.objects.filter(sha256_hash=sha256_hash).exists():
-		return HttpResponse("{'status': 400, 'error_message': 'This file appears to have been processed already' }", status=400, content_type="application/json")
-	else:
-		ProcessedFile.objects.create(sha256_hash=sha256_hash)
+	# if ProcessedFile.objects.filter(sha256_hash=sha256_hash).exists():
+	# 	return HttpResponse("{'status': 400, 'error_message': 'This file appears to have been processed already' }", status=400, content_type="application/json")
+	# else:
+	# 	ProcessedFile.objects.create(sha256_hash=sha256_hash)
 
 	if extension == ".json":
 		processJSONInput(dataFile, app)
@@ -26,25 +26,33 @@ def generateData(dataFile, app, source):
 
 def processJSONInput(dataFile, app):
 	jsonObject = json.loads(dataFile.read())
-	datarow = {}
+	tweetIds = []
+	lineModifier = 0
 	line_limit = 1500
 	data = []
 	offset = ""
 	
 	for index, row in enumerate(jsonObject):
+		datarow = {}
+		if row["tweetID"] in tweetIds:
+			lineModifier = lineModifier + 1
+			continue
+
 		if row.get("user").get("screen_name"):
 			datarow["User-Name"] = row.get("user").get("screen_name")
 		if row.get("text"):
+			if 'RT ' in row.get('text'):
+				lineModifier = lineModifier + 1
+				continue
 			datarow["Tweet"] = row.get("text")
 
 		if row.get("created_at"):
 			datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(row.get('created_at'), "%a %B %d %H:%M:%S +0000 %Y"))
-
 		if row.get("id"):
 			datarow["TweetID"] = row.get("id")
 		data.append(datarow)
 
-		if index == line_limit:
+		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
 			writeFile(data, app, offset)
 			line_limit += 1500
@@ -55,25 +63,34 @@ def processJSONInput(dataFile, app):
 
 def processCSVInput(dataFile, app):
 	csvDict = csv.DictReader(dataFile)
-	datarow = {}
 	line_limit = 1500
 	data = []
+	tweetIds = []
+	lineModifier = 0
 	offset = ""
 
 	for index, row in enumerate(csvDict):
 		datarow = {}
 
+		if row["tweetID"] in tweetIds:
+			lineModifier = lineModifier + 1
+			continue
+
 		if row["userName"]:
 			datarow["User-Name"] = row["userName"]
 		if row["message"]:
+			if 'RT ' in row["message"]:
+				lineModifier = lineModifier + 1
+				continue
 			datarow["Tweet"] = row["message"]
+
 		if row["createdAt"]:
 			datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(row["createdAt"], "%Y-%m-%dT%H:%MZ"))
 		if row["tweetID"]:
 			datarow["TweetID"] = row["tweetID"]
 		data.append(datarow)
 
-		if index == line_limit:
+		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
 			writeFile(data, app, offset)
 			line_limit += 1500
