@@ -57,3 +57,6 @@ docs/_build/
 
 #sqlite files
 *.sqlite3
+
+#output folder
+static/output

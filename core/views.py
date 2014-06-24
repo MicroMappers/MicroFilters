@@ -8,10 +8,11 @@ def index(request):
 
 def downloadPage(request):
 	if request.method == "POST":
+
 		if request.FILES.get('data-file'):
-			return utils.generateData(request.FILES.get('data-file'), "file")
+			return utils.generateData(request.FILES.get('data-file'),request.POST.get('app'), "file")
 		elif request.POST.get("data-url"):
-			return utils.generateData(request.POST.get("data-url"), "url")
+			return utils.generateData(request.POST.get("data-url"),request.POST.get('app'), "url")
 	else:
 		redirect('index')
 
@@ -21,7 +22,7 @@ def getAppList(request):
 	try:
 		appList = urllib2.urlopen("http://pybossa-dev.qcri.org/AIDRTrainerAPI/rest/deployment/active")
 		responseString = appList.read()
-		
+
 		#backup the applist locally
 		appListFile = open('static/fallback/applist.json', 'w')
 		appListFile.write(responseString)
