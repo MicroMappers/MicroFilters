@@ -1,6 +1,6 @@
-import json, csv, time, urllib2
+import json, csv, time, urllib2, os, hashlib
 from django.http import HttpResponse
-import os
+from core.models import *
 
 def generateData(dataFile, source):
 	if source == "file":
@@ -8,7 +8,14 @@ def generateData(dataFile, source):
 	elif source == "url":
 		dataFile, extension = fetchFileFromURL(dataFile)
 		if dataFile == 'error':
-			return HttpResponse("{'status': 400, 'error_message': 'URL does not have a csv of json endpoint' }",status=400, content_type="application/json")
+			return HttpResponse("{'status': 400, 'error_message': 'URL does not have a csv of json endpoint' }", status=400, content_type="application/json")
+	
+	sha256_hash = str(hashfile(dataFile, hashlib.sha256()))
+	if ProcessedFile.objects.filter(sha256_hash=sha256_hash).exists():
+		return HttpResponse("{'status': 400, 'error_message': 'This file appears to have been processed already' }", status=400, content_type="application/json")
+	else:
+		ProcessedFile.objects.create(sha256_hash=sha256_hash)
+
 	data = []
 	if extension == ".json":
 		datarow = {}
@@ -68,3 +75,10 @@ def fetchFileFromURL(url):
 def getFileExtension(dataFile):
 		dataFileName, extension = os.path.splitext(dataFile.name)
 		return extension
+
+def hashfile(afile, hasher, blocksize=65536):
+	buf = afile.read(blocksize)
+	while len(buf) > 0:
+		hasher.update(buf)
+		buf = afile.read(blocksize)
+	return hasher.hexdigest()
