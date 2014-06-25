@@ -8,9 +8,9 @@ def generateData(dataFile, app, source):
 	elif source == "url":
 		dataFile, extension = fetchFileFromURL(dataFile)
 		if dataFile == 'error':
-			return HttpResponse("{'status': 400, 'error_message': 'URL does not have a csv of json endpoint' }", status=400, content_type="application/json")
+			return HttpResponse(status=400)
 	
-	sha256_hash = str(hashfile(dataFile, hashlib.sha256()))
+	#sha256_hash = str(hashfile(dataFile, hashlib.sha256()))
 	# if ProcessedFile.objects.filter(sha256_hash=sha256_hash).exists():
 	# 	return HttpResponse("{'status': 400, 'error_message': 'This file appears to have been processed already' }", status=400, content_type="application/json")
 	# else:
@@ -22,7 +22,7 @@ def generateData(dataFile, app, source):
 	elif extension == ".csv":
 		processCSVInput(dataFile, app)
 
-	return HttpResponse("{ 'message': 'Files created succesfully' }",status=200, content_type="application/json")
+	return HttpResponse(status=200)
 
 def processJSONInput(dataFile, app):
 	jsonObject = json.loads(dataFile.read())
