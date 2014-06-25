@@ -1,3 +1,13 @@
+function generateUUID() {
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxxxxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+    });
+    return uuid;
+};
+
 $(document).ready(
 	function(){
 		$.getJSON( "/getAppList", function( data ) {
@@ -18,11 +28,65 @@ $(document).ready(
     		$("#app-list").parent().append("<b>Could not fetch app list</b>");
   		});
 
+		//populate app list
   		$("#app-list").change(function(){
   			$("#choice-list .app_choices").hide();
   			if ($("#app-list option:selected").attr('appid')){
   				$("#"+$("#app-list option:selected").attr('appid')+"_choices").show();
   			}
+  		});
+
+  		//post the form via ajax
+  		$("form#main-form").submit(function(event){
+  			event.preventDefault();
+  			if($("#app-list option:selected").attr("value") == 'none'){
+  				$("#message-box").html(''+
+  					'<div data-alert class="alert-box alert">'+
+ 						 'You have to select an app type'+
+  					 	 '<a href="#" class="close">&times;</a>'+
+				    '</div>'+
+				    '');
+  				$(document).foundation('alert');
+  				return false;
+  			}
+  			var formData = new FormData($(this)[0]);
+        uuid = generateUUID();
+  			$.ajax({
+  				url: '/download/?X-Progress-ID='+uuid,
+  				type: 'POST',
+  				data: formData,
+  				async: false,
+  				cache: false,
+  				contentType: false,
+  				processData: false,
+  				statusCode: {
+    				400: function() {
+      					$("#message-box").html(''+
+		  					'<div data-alert class="alert-box alert">'+
+		 						 'Bad request: No file attached.'+
+		  					 	 '<a href="#" class="close">&times;</a>'+
+						    '</div>'+
+						    '');
+      					$(document).foundation('alert');
+    				}
+  				},
+  				success: function(response){
+  					$("#message-box").html(''+
+  					'<div data-alert class="alert-box success">'+
+ 						 'File was processed successfully'+
+  					 	 '<a href="#" class="close">&times;</a>'+
+				    '</div>'+
+				    '');
+				    $(document).foundation('alert');
+  				}
+  			});
+
+        function updateProgressInfo(){ 
+          $.getJSON('/uploadProgress/'+uuid, function(data){ console.log(data)});
+          window.setTimeout(updateProgressInfo, 1000);
+        };
+
+         window.setTimeout(updateProgressInfo, 1000);
   		});
 	}
 	);

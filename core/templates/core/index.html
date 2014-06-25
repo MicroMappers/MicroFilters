@@ -4,12 +4,16 @@
       <div class="large-12 columns">
         <h1>MicroFilters</h1>
       </div>
+      <div class="large-12 columns" id="message-box">
+
+      </div>
        <hr>
     </div>
 
     <div class="row">
-        <form method="POST" action="/download/" enctype="multipart/form-data" target="_blank">
+        <form id="main-form" method="POST" action="/download/" enctype="multipart/form-data" target="_blank">
         {% csrf_token %}
+        <input type="hidden" name="X-Progress-ID" value="6GUm6x">
           <div class="row">
             <div class="large-12 columns">
             <div class="row">
@@ -30,8 +34,14 @@
                 <label>Data Source:</label>
               </div>
               <div class="large-10 columns">
-                <input type="text" id="data-url" name="data-url" placeholder="http://your/url/here" size='50'> -or-
-                <input accept=".json, .csv" type="file" id="data-file" name="data-file">
+                <div class="panel">
+                  <input type="text" id="data-url" name="data-url" placeholder="http://your/url/here" size='50'>
+                  <label>-or-</label>
+                  <input accept=".json, .csv" type="file" id="data-file" name="data-file">
+                  <div class="progress success hide">
+                    <span class="meter" style="width: 0%"></span>
+                  </div>
+                </div>
               </div>
               </div>
             </div>
