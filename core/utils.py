@@ -53,7 +53,7 @@ def processJSONInput(dataFile, app, cacheKey):
 			datarow["Tweet"] = row.get("text")
 
 		if row.get("created_at"):
-			datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(row.get('created_at'), "%a %B %d %H:%M:%S +0000 %Y"))
+			datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(row.get('created_at'), "%a %b %d %H:%M:%S +0000 %Y"))
 		if row.get("id"):
 			datarow["TweetID"] = row.get("id")
 		data.append(datarow)
@@ -96,7 +96,10 @@ def processCSVInput(dataFile, app, cacheKey):
 			datarow["Tweet"] = row["message"]
 
 		if row["createdAt"]:
-			datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(row["createdAt"], "%Y-%m-%dT%H:%MZ"))
+			try:
+				datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(row["createdAt"], "%Y-%m-%dT%H:%MZ"))
+			except:
+				datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(row["createdAt"], "%a %b %d %H:%M:%S +0000 %Y"))
 		if row["tweetID"]:
 			datarow["TweetID"] = row["tweetID"]
 		data.append(datarow)
