@@ -111,8 +111,11 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 	if userName:
 		datarow["User-Name"] = userName
 	if creationTime:
-		datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(creationTime, "%Y-%m-%dT%H:%MZ"))
-	
+		try:
+			datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(creationTime, "%Y-%m-%dT%H:%MZ"))
+		except:
+			datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(creationTime, "%a %b %d %H:%M:%S +0000 %Y"))
+
 	tweetIds.append(tweetID)
 	return datarow
 
