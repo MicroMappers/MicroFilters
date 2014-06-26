@@ -24,7 +24,8 @@ class UploadProgressCachedHandler(TemporaryFileUploadHandler):
         cache.set(self.cache_key, {
             'state': 'uploading',
             'size': self.content_length,
-            'received': 0
+            'received': 0,
+            'progress': 0
         })
 
     def new_file(self, field_name, file_name, content_type, content_length, charset=None):
@@ -35,6 +36,7 @@ class UploadProgressCachedHandler(TemporaryFileUploadHandler):
             data = cache.get(self.cache_key)
             if data:
                 data['received'] += self.chunk_size
+                data['progress'] = (((data['received']/data['size'])*100)/4)
                 cache.set(self.cache_key, data)
         return raw_data
 
@@ -45,6 +47,5 @@ class UploadProgressCachedHandler(TemporaryFileUploadHandler):
         if self.cache_key:
             data = cache.get(self.cache_key)
             if data:
-                # upload is 'done'.
-                data['state'] = 'done'
+                data['progress'] = 25
                 cache.set(self.cache_key, data)

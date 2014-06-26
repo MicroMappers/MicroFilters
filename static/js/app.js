@@ -49,13 +49,42 @@ $(document).ready(
   				$(document).foundation('alert');
   				return false;
   			}
-  			var formData = new FormData($(this)[0]);
-        uuid = generateUUID();
+
+  		var formData = new FormData($(this)[0]);
+        var uuid = generateUUID();
+        //append the progress bar to the UI
+        $('#message-box').html(''+
+            '<div class="progress success">'+
+                '<span class="meter" style="width: 0%"></span>'+
+            '</div>');
+        var progressBar = $('.meter');
+        
+        function updateProgressInfo(){ 
+          $.getJSON('/uploadProgress/'+uuid, function(data){ 
+            console.log(data);
+            if( data['state'] == 'done'){
+                progressBar.css({
+                    width: parseInt(data['progress'])+'%'
+                });
+              return true;
+            }
+            else{
+                progressBar.css({
+                    width: parseInt(data['progress'])+'%'
+                });
+            }
+            window.setTimeout(updateProgressInfo, 1000);
+          });
+        }
+
+        window.setTimeout(updateProgressInfo, 1000);
+        
+
   			$.ajax({
   				url: '/download/?X-Progress-ID='+uuid,
   				type: 'POST',
   				data: formData,
-  				async: false,
+  				async: true,
   				cache: false,
   				contentType: false,
   				processData: false,
@@ -80,13 +109,6 @@ $(document).ready(
 				    $(document).foundation('alert');
   				}
   			});
+	});//end submit
 
-        function updateProgressInfo(){ 
-          $.getJSON('/uploadProgress/'+uuid, function(data){ console.log(data)});
-          window.setTimeout(updateProgressInfo, 1000);
-        };
-
-         window.setTimeout(updateProgressInfo, 1000);
-  		});
-	}
-	);
+});//end document ready
