@@ -1,12 +1,13 @@
 import json, csv, time, urllib2, os, hashlib, tweepy
 from django.http import HttpResponse
+from django.core.cache import cache
 from core.models import *
 
-def generateData(dataFile, app, source):
+def generateData(dataFile, app, source, cacheKey):
 	if source == "file":
 		extension = getFileExtension(dataFile)
 	elif source == "url":
-		dataFile, extension = fetchFileFromURL(dataFile)
+		dataFile, extension = fetchFileFromURL(dataFile, cacheKey)
 		if dataFile == 'error':
 			return HttpResponse(status=400)
 	
@@ -17,13 +18,13 @@ def generateData(dataFile, app, source):
 	# 	ProcessedFile.objects.create(sha256_hash=sha256_hash)
 
 	if extension == ".json":
-		processJSONInput(dataFile, app)
+		processJSONInput(dataFile, app, cacheKey)
 	elif extension == ".csv":
-		processCSVInput(dataFile, app)
+		processCSVInput(dataFile, app, cacheKey)
 
 	return HttpResponse(status=200)
 
-def processJSONInput(dataFile, app):
+def processJSONInput(dataFile, app, cacheKey):
 	jsonObject = json.loads(dataFile.read())
 	tweetIds = []
 	lineModifier = 0
@@ -31,6 +32,11 @@ def processJSONInput(dataFile, app):
 	data = []
 	offset = ""
 	
+	cacheData = cache.get(cacheKey)
+	cacheData['state'] = 'processing'
+	cacheData['progress'] = 50
+	cache.set(cacheKey, cacheData)
+
 	for index, row in enumerate(jsonObject):
 		tweetData = parseTweet(row.get("id"), row.get("text"), row.get("user").get("screen_name"), row.get("created_at"), tweetIds, app)
 		if tweetData:
@@ -41,20 +47,25 @@ def processJSONInput(dataFile, app):
 
 		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
-			writeFile(data, app, offset)
+			writeFile(data, app, cacheKey, offset)
 			line_limit += 1500
 			data = []
 			print "file written at", index
 
-	writeFile(data, app, offset)
+	writeFile(data, app, cacheKey, offset)
 
-def processCSVInput(dataFile, app):
+def processCSVInput(dataFile, app, cacheKey):
 	csvDict = csv.DictReader(dataFile)
 	line_limit = 1500
 	data = []
 	tweetIds = []
 	lineModifier = 0
 	offset = ""
+
+	cacheData = cache.get(cacheKey)
+	cacheData['state'] = 'processing'
+	cacheData['progress'] = 50
+	cache.set(cacheKey, cacheData)
 
 	for index, row in enumerate(csvDict):
 		tweetData = parseTweet(row["tweetID"], row["message"], row["userName"], row["createdAt"], tweetIds, app)
@@ -66,11 +77,11 @@ def processCSVInput(dataFile, app):
 
 		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
-			writeFile(data, app, offset)
+			writeFile(data, app, cacheKey, offset)
 			line_limit += 1500
 			data = []
 
-	writeFile(data, app, offset)
+	writeFile(data, app, cacheKey, offset)
 
 def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 	datarow = {}
@@ -135,18 +146,33 @@ def checkForYoutube(tweetID):
 		print 'fail... continuing'
 	return None
 
-def writeFile(data, app, offset=""):
+def writeFile(data, app, cacheKey, offset=""):
 	filename = app+time.strftime("%Y%m%d%H%M%S",time.localtime())+offset+'.csv'
 	outputfile = open("static/output/"+filename, "w")
+
+	cacheData = cache.get(cacheKey)
+	cacheData['state'] = 'writing'
+	cacheData['progress'] = 75
+	cache.set(cacheKey, cacheData)
 
 	writer = csv.DictWriter(outputfile, ["User-Name","Tweet","Time-stamp","Location","Latitude","Longitude","Image-link","TweetID"])
 	writer.writeheader()
 	for row in data:
 		writer.writerow(row)
 
+	cacheData = cache.get(cacheKey)
+	cacheData['state'] = 'done'
+	cacheData['progress'] = 100
+	cache.set(cacheKey, cacheData)
+
 	outputfile.close()
 
-def fetchFileFromURL(url):
+def fetchFileFromURL(url, cacheKey):
+	cache.set(cacheKey, {
+            'state': 'uploading',
+            'progress': 25
+        })
+
 	response = urllib2.urlopen(url)
 	if response.headers.type == 'application/json':
 		return response, '.json'

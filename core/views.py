@@ -9,11 +9,11 @@ def index(request):
 
 def downloadPage(request):
 	if request.method == "POST":
-		print request.FILES
+		cacheKey = "%s_%s" % (request.META['REMOTE_ADDR'], request.GET.get("X-Progress-ID") )
 		if request.FILES.get('data-file'):
-			return utils.generateData(request.FILES.get('data-file'), request.POST.get('app'), "file")
+			return utils.generateData(request.FILES.get('data-file'),request.POST.get('app'), "file", cacheKey)
 		elif request.POST.get("data-url"):
-			return utils.generateData(request.POST.get("data-url"),request.POST.get('app'), "url")
+			return utils.generateData(request.POST.get("data-url"),request.POST.get('app'), "url", cacheKey)
 		else:
 			return HttpResponse(status=400)
 	else:
