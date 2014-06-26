@@ -50,7 +50,7 @@ def processJSONInput(dataFile, app, cacheKey):
 			if 'RT ' in row.get('text'):
 				lineModifier = lineModifier + 1
 				continue
-			datarow["Tweet"] = row.get("text")
+			datarow["Tweet"] = row.get("text").encode('ascii', 'ignore')
 
 		if row.get("created_at"):
 			datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(row.get('created_at'), "%a %b %d %H:%M:%S +0000 %Y"))
