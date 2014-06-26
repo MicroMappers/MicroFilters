@@ -1,55 +1,56 @@
 {% extends 'core/base.html' %}
-    {% block content %}
-    <div class="row">
-      <div class="large-12 columns">
-        <h1>MicroFilters</h1>
-      </div>
-      <div class="large-12 columns" id="message-box">
+{% block content %}
+<div class='header'>
+	<div class="row">
+		<div class="large-8 columns small-centered">
+			<h1>MicroFilters</h1>
+		</div>
+	</div>
+</div>
 
-      </div>
-       <hr>
-    </div>
+<div class="row main">
+	<form id="main-form" method="POST" action="/download/" enctype="multipart/form-data" target="_blank">
+	{% csrf_token %}
+		<input type="hidden" name="X-Progress-ID" value="6GUm6x">
+		<div class="large-8 columns large-centered" id="message-box"></div>
+		<div class="large-10 columns large-centered">
+			<div class="row">
+				<div class="large-10 columns small-centered">
+					<div class='panel'>
+						<div>
+							<h3>Select App Type</h3>
+							<ul class="small-block-grid-2">
+								<li><div id="app-list"><ul class='padding'></ul></div></li>
+								<li><div id="choice-list"><ul></ul></div></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="large-10 columns small-centered">
+					<div class="panel">
+						<h3>Data Source</h3>
+						<div class="large-8 columns small-centered">
+							<input type="text" id="data-url" name="data-url" placeholder="http://url/to/your/file/here" size='50'>
+						</div>
+						<label id='or' class="large-2 columns small-centered">-or-</label>
+						<div class="large-4 columns small-centered">
+							<input accept=".json, .csv" type="file" id="data-file" name="data-file">
+						</div>
+						<div class="progress success hide">
+							<span class="meter" style="width: 0%"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="large-6 columns small-centered">
+				<button type="submit" class="expand button">Generate Files</button>
+			</div>
+		</div>
+		<hr>
+	</form>
+</div>
 
-    <div class="row">
-        <form id="main-form" method="POST" action="/download/" enctype="multipart/form-data" target="_blank">
-        {% csrf_token %}
-        <input type="hidden" name="X-Progress-ID" value="6GUm6x">
-          <div class="row">
-            <div class="large-12 columns">
-            <div class="row">
-            <div class="large-6 columns">
-              <label>Select App Type
-                <select name="app" id="app-list">
-                  <option value="none"></option>
-                </select>
-              </label>
-            </div>
-            <div id="choice-list" class="large-6 medium-6 columns">
-              
-            </div>
-            </div>
-            <hr>
-              <div class="row">
-              <div class="large-2 columns">
-                <label>Data Source:</label>
-              </div>
-              <div class="large-10 columns">
-                <div class="panel">
-                  <input type="text" id="data-url" name="data-url" placeholder="http://your/url/here" size='50'>
-                  <label>-or-</label>
-                  <input accept=".json, .csv" type="file" id="data-file" name="data-file">
-                  <div class="progress success hide">
-                    <span class="meter" style="width: 0%"></span>
-                  </div>
-                </div>
-              </div>
-              </div>
-            </div>
-          </div>
-          <hr>
-          <div class="row">
-            <button type="submit" class="large-12 large-centered button">Generate Files</button>
-          </div>
-        </form>
-    </div>
-  {% endblock %}
+<div class="footer"></div>
+{% endblock %}

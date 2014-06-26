@@ -1,4 +1,4 @@
-import json, csv, time, urllib2, os, hashlib
+import json, csv, time, urllib2, os, hashlib, tweepy
 from django.http import HttpResponse
 from core.models import *
 
@@ -18,7 +18,6 @@ def generateData(dataFile, app, source):
 
 	if extension == ".json":
 		processJSONInput(dataFile, app)
-
 	elif extension == ".csv":
 		processCSVInput(dataFile, app)
 
@@ -33,24 +32,12 @@ def processJSONInput(dataFile, app):
 	offset = ""
 	
 	for index, row in enumerate(jsonObject):
-		datarow = {}
-		if row.get("id") in tweetIds:
+		tweetData = parseTweet(row.get("id"), row.get("text"), row.get("user").get("screen_name"), row.get("created_at"), tweetIds, app)
+		if tweetData:
+			data.append(tweetData)
+		else:
 			lineModifier = lineModifier + 1
 			continue
-
-		if row.get("user").get("screen_name"):
-			datarow["User-Name"] = row.get("user").get("screen_name")
-		if row.get("text"):
-			if 'RT ' in row.get('text'):
-				lineModifier = lineModifier + 1
-				continue
-			datarow["Tweet"] = row.get("text")
-
-		if row.get("created_at"):
-			datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(row.get('created_at'), "%a %B %d %H:%M:%S +0000 %Y"))
-		if row.get("id"):
-			datarow["TweetID"] = row.get("id")
-		data.append(datarow)
 
 		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
@@ -70,25 +57,12 @@ def processCSVInput(dataFile, app):
 	offset = ""
 
 	for index, row in enumerate(csvDict):
-		datarow = {}
-
-		if row["tweetID"] in tweetIds:
+		tweetData = parseTweet(row["tweetID"], row["message"], row["userName"], row["createdAt"], tweetIds, app)
+		if tweetData:
+			data.append(tweetData)
+		else:
 			lineModifier = lineModifier + 1
 			continue
-
-		if row["userName"]:
-			datarow["User-Name"] = row["userName"]
-		if row["message"]:
-			if 'RT ' in row["message"]:
-				lineModifier = lineModifier + 1
-				continue
-			datarow["Tweet"] = row["message"]
-
-		if row["createdAt"]:
-			datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(row["createdAt"], "%Y-%m-%dT%H:%MZ"))
-		if row["tweetID"]:
-			datarow["TweetID"] = row["tweetID"]
-		data.append(datarow)
 
 		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
@@ -98,6 +72,68 @@ def processCSVInput(dataFile, app):
 
 	writeFile(data, app, offset)
 
+def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
+	datarow = {}
+
+	if tweetID:
+		if tweetID in tweetIds:
+			return None
+		datarow["TweetID"] = tweetID
+
+	if message:
+		if 'RT ' in message:
+			return None
+		datarow["Tweet"] = message
+
+	if app == 'imageclicker':
+		mediaLink = checkForPhotos(tweetID)
+	elif app == 'videoclicker':
+		mediaLink = checkForYoutube(tweetID)
+
+	# if mediaLink:
+	# 	datarow["Location"] = mediaLink
+	# 	datarow["Image-Link"] = mediaLink
+	# elif app == 'imageclicker' or app == 'videoclicker':
+	# 	print 'none'
+	# 	return None
+
+	if userName:
+		datarow["User-Name"] = userName
+	if creationTime:
+		datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(creationTime, "%Y-%m-%dT%H:%MZ"))
+	
+	tweetIds.append(tweetID)
+	return datarow
+
+def checkForPhotos(tweetID):
+	auth = tweepy.OAuthHandler('fl3lIOuMV1PJX83AbJn7cahyt', 'Kj0Qe7nmnpPAuCZH9tVpwfyT1TkA6hyZmnM4s1Wo7M0nFYxYiU')
+	auth.set_access_token('161080682-fRATWfZAKIqE0DKDwJcBAoQx7Yto5q60UM2otBDl', 'a8HzOnEqDX4FkIjvl0OvFpnVQHcu9acmZR1wy9Xh2Y6wu')
+	api = tweepy.API(auth)
+	try:
+		tweet = api.get_status(tweetID)
+		media = tweet.entities['media']
+		for m in media:
+			if m['type'] == 'photo':
+				return m['media_url']
+	except Exception as e:
+		print e
+		print 'fail... continuing'
+	return None
+
+def checkForYoutube(tweetID):
+	auth = tweepy.OAuthHandler('fl3lIOuMV1PJX83AbJn7cahyt', 'Kj0Qe7nmnpPAuCZH9tVpwfyT1TkA6hyZmnM4s1Wo7M0nFYxYiU')
+	auth.set_access_token('161080682-fRATWfZAKIqE0DKDwJcBAoQx7Yto5q60UM2otBDl', 'a8HzOnEqDX4FkIjvl0OvFpnVQHcu9acmZR1wy9Xh2Y6wu')
+	api = tweepy.API(auth)
+	try:
+		tweet = api.get_status(tweetID)
+		urls = tweet.entities['urls']
+		for url in urls:
+			if "youtube" in url['display_url'] or "youtu.be" in url['display_url']:
+				return url['display_url']
+	except Exception as e:
+		print e
+		print 'fail... continuing'
+	return None
 
 def writeFile(data, app, offset=""):
 	filename = app+time.strftime("%Y%m%d%H%M%S",time.localtime())+offset+'.csv'
@@ -109,7 +145,6 @@ def writeFile(data, app, offset=""):
 		writer.writerow(row)
 
 	outputfile.close()
-	
 
 def fetchFileFromURL(url):
 	response = urllib2.urlopen(url)

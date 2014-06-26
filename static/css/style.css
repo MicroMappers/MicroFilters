@@ -1,0 +1,45 @@
+.header {
+	background-color: #00a79d;
+	margin-bottom: 10px;
+}
+.header h1 {
+	color: white;
+}
+
+h3 {
+	text-align: center;
+}
+
+li {
+	list-style: none;
+}
+
+button {
+	background-color: #4190c2 !important;
+}
+
+#app-list {
+	padding: 10px 10px 0 50px;
+}
+#choice-list {
+	padding-left: 20px;
+	margin-top: 10px;
+	/*border-left: 1px solid #999;*/
+}
+#or {
+	margin-bottom: 1rem;
+	text-align: center;
+}
+
+.main {
+	padding-bottom: 100px;
+}
+
+footer, .footer {
+	height: 100px;
+	background-color: #464646;
+	position: fixed;
+	bottom: 0;
+	right: 0;
+	left: 0;
+}

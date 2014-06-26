@@ -11,7 +11,7 @@ def downloadPage(request):
 	if request.method == "POST":
 		print request.FILES
 		if request.FILES.get('data-file'):
-			return utils.generateData(request.FILES.get('data-file'),request.POST.get('app'), "file")
+			return utils.generateData(request.FILES.get('data-file'), request.POST.get('app'), "file")
 		elif request.POST.get("data-url"):
 			return utils.generateData(request.POST.get("data-url"),request.POST.get('app'), "url")
 		else:
