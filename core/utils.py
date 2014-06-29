@@ -94,7 +94,7 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 	if message:
 		if 'RT ' in message:
 			return None
-		datarow["Tweet"] = message
+		datarow["Tweet"] = message.encode('ascii', 'ignore')
 
 		if app == 'imageclicker':
 			mediaLink = checkForPhotos(message)
