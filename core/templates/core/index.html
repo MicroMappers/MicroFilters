@@ -2,9 +2,7 @@
 {% block content %}
 <div class='header'>
 	<div class="row">
-		<div class="large-8 columns small-centered">
-			<h1>MicroFilters</h1>
-		</div>
+			<h1 class="large-8 columns small-centered"><img src="/static/img/mm_logo.png" height="62" width="62" alt="">MicroFilters</h1>
 	</div>
 </div>
 
@@ -19,10 +17,11 @@
 					<div class='panel'>
 						<div>
 							<h3>Select App Type</h3>
-							<ul class="small-block-grid-2">
-								<li><div id="app-list"><ul class='padding'></ul></div></li>
-								<li><div id="choice-list"><ul></ul></div></li>
-							</ul>
+								<div id="app-list"><ul>
+									<li><input type='radio' name='app' value='textclicker' appid=''>Text Clicker</input></li>
+									<li><input type='radio' name='app' value='imageclicker' appid=''>Image Clicker</input></li>
+									<li><input type='radio' name='app' value='videoclicker' appid=''>Video Clicker</input></li>
+								</ul></div>
 						</div>
 					</div>
 				</div>
@@ -35,7 +34,7 @@
 							<input type="text" id="data-url" name="data-url" placeholder="http://url/to/your/file/here" size='50'>
 						</div>
 						<label id='or' class="large-2 columns small-centered">-or-</label>
-						<div class="large-4 columns small-centered">
+						<div class="small-4 columns small-centered">
 							<input accept=".json, .csv" type="file" id="data-file" name="data-file">
 						</div>
 						<div class="progress success hide">
@@ -48,7 +47,6 @@
 				<button type="submit" class="expand button">Generate Files</button>
 			</div>
 		</div>
-		<hr>
 	</form>
 </div>
 

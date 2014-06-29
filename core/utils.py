@@ -1,4 +1,4 @@
-import json, csv, time, urllib2, os, hashlib, tweepy
+import json, csv, time, urllib2, os, hashlib, re
 from django.http import HttpResponse
 from django.core.cache import cache
 from core.models import *
@@ -96,18 +96,21 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 			return None
 		datarow["Tweet"] = message
 
-	if app == 'imageclicker':
-		mediaLink = checkForPhotos(tweetID)
-	elif app == 'videoclicker':
-		mediaLink = checkForYoutube(tweetID)
-
-	# if mediaLink:
-	# 	datarow["Location"] = mediaLink
-	# 	datarow["Image-Link"] = mediaLink
-	# elif app == 'imageclicker' or app == 'videoclicker':
-	# 	print 'none'
-	# 	return None
-
+		if app == 'imageclicker':
+			mediaLink = checkForPhotos(message)
+			if mediaLink:
+				datarow["Location"] = mediaLink
+				datarow["Image-Link"] = mediaLink
+			else:
+				return None
+		elif app == 'videoclicker':
+			mediaLink = checkForYoutube(message)
+			if mediaLink:
+				datarow["Location"] = mediaLink
+				datarow["Image-Link"] = mediaLink
+			else:
+				return None
+		
 	if userName:
 		datarow["User-Name"] = userName
 	if creationTime:
@@ -119,34 +122,34 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 	tweetIds.append(tweetID)
 	return datarow
 
-def checkForPhotos(tweetID):
-	auth = tweepy.OAuthHandler('fl3lIOuMV1PJX83AbJn7cahyt', 'Kj0Qe7nmnpPAuCZH9tVpwfyT1TkA6hyZmnM4s1Wo7M0nFYxYiU')
-	auth.set_access_token('161080682-fRATWfZAKIqE0DKDwJcBAoQx7Yto5q60UM2otBDl', 'a8HzOnEqDX4FkIjvl0OvFpnVQHcu9acmZR1wy9Xh2Y6wu')
-	api = tweepy.API(auth)
-	try:
-		tweet = api.get_status(tweetID)
-		media = tweet.entities['media']
-		for m in media:
-			if m['type'] == 'photo':
-				return m['media_url']
-	except Exception as e:
-		print e
-		print 'fail... continuing'
+def checkForPhotos(message):
+	url = getActualURL(message)
+	if url:
+		photoPattern = re.compile("(https://(twitter\.com)\S*(photo)\S*)")
+		match = photoPattern.search(url)
+		if match:
+			return url
 	return None
 
-def checkForYoutube(tweetID):
-	auth = tweepy.OAuthHandler('fl3lIOuMV1PJX83AbJn7cahyt', 'Kj0Qe7nmnpPAuCZH9tVpwfyT1TkA6hyZmnM4s1Wo7M0nFYxYiU')
-	auth.set_access_token('161080682-fRATWfZAKIqE0DKDwJcBAoQx7Yto5q60UM2otBDl', 'a8HzOnEqDX4FkIjvl0OvFpnVQHcu9acmZR1wy9Xh2Y6wu')
-	api = tweepy.API(auth)
-	try:
-		tweet = api.get_status(tweetID)
-		urls = tweet.entities['urls']
-		for url in urls:
-			if "youtube" in url['display_url'] or "youtu.be" in url['display_url']:
-				return url['display_url']
-	except Exception as e:
-		print e
-		print 'fail... continuing'
+def checkForYoutube(message):
+	url = getActualURL(message)
+	if url:
+		youtube = re.compile("youtube")
+		m = youtube.search(url)
+		if m:
+			print url
+		youtubePattern = re.compile("(http://(youtube\.com)\S*)")
+		match = youtubePattern.search(url)
+		if match:
+			return url
+	return None
+
+def getActualURL(message):
+	pattern = re.compile("(http://(t\.co)\S*)")
+	match = pattern.search(message)
+	if match:
+		link = match.group()
+		return urllib2.urlopen(link).geturl()
 	return None
 
 def writeFile(data, app, cacheKey, offset=""):
