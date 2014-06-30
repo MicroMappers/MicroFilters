@@ -3,6 +3,8 @@ from django.http import HttpResponse
 from django.core.cache import cache
 from core.models import *
 
+APPID = {'textclicker': 78, 'imageclicker': 80, 'videoclicker': 82}
+
 def generateData(dataFile, app, source, cacheKey):
 	if source == "file":
 		extension = getFileExtension(dataFile)
@@ -27,6 +29,7 @@ def generateData(dataFile, app, source, cacheKey):
 def processJSONInput(dataFile, app, cacheKey):
 	jsonObject = json.loads(dataFile.read())
 	tweetIds = []
+	aidr_json = []
 	lineModifier = 0
 	line_limit = 1500
 	data = []
@@ -47,18 +50,20 @@ def processJSONInput(dataFile, app, cacheKey):
 
 		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
-			writeFile(data, app, cacheKey, offset)
+			aidr_json.append(writeFile(data, app, cacheKey, offset))
 			line_limit += 1500
 			data = []
 			print "file written at", index
 
-	writeFile(data, app, cacheKey, offset)
+	aidr_json.append(writeFile(data, app, cacheKey, offset))
+	updateAIDR(json.dumps(aidr_json))
 
 def processCSVInput(dataFile, app, cacheKey):
 	csvDict = csv.DictReader(dataFile)
 	line_limit = 1500
 	data = []
 	tweetIds = []
+	aidr_json = []
 	lineModifier = 0
 	offset = ""
 
@@ -77,11 +82,21 @@ def processCSVInput(dataFile, app, cacheKey):
 
 		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
-			writeFile(data, app, cacheKey, offset)
+			aidr_json.append(writeFile(data, app, cacheKey, offset))
 			line_limit += 1500
 			data = []
 
-	writeFile(data, app, cacheKey, offset)
+	aidr_json.append(writeFile(data, app, cacheKey, offset))
+	updateAIDR(json.dumps(aidr_json))
+
+def updateAIDR(json_data):
+	data_len = len(json_data)
+	req = urllib2.Request("http://pybossa-dev.qcri.org/AIDRTrainerAPI/rest/source/save", json_data, {'Content-Type': 'application/json', 'Content-Length': data_len})
+	f = urllib2.urlopen(req)
+	response = f.read()
+	print response
+	f.close()
+	print 'done'
 
 def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 	datarow = {}
@@ -174,6 +189,7 @@ def writeFile(data, app, cacheKey, offset=""):
 	cache.set(cacheKey, cacheData)
 
 	outputfile.close()
+	return { "fileUrl": "http://127.0.0.1:8000/static/output/" + filename, "appId": APPID[app] }
 
 def fetchFileFromURL(url, cacheKey):
 	cache.set(cacheKey, {
