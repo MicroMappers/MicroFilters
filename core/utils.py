@@ -94,7 +94,13 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 	if message:
 		if 'RT ' in message:
 			return None
-		datarow["Tweet"] = message.encode('ascii', 'ignore')
+		try:
+			datarow["Tweet"] = message.decode('utf-8').encode('ascii', 'ignore')
+		except:
+			try: 
+				datarow["Tweet"] = message
+			except Exception as e:
+				print e
 
 		if app == 'imageclicker':
 			mediaLink = checkForPhotos(message)
@@ -134,18 +140,14 @@ def checkForPhotos(message):
 def checkForYoutube(message):
 	url = getActualURL(message)
 	if url:
-		youtube = re.compile("youtube")
-		m = youtube.search(url)
-		if m:
-			print url
-		youtubePattern = re.compile("(http://(youtube\.com)\S*)")
+		youtubePattern = re.compile("(http(s)?://(www\.youtube\.com)\S*)")
 		match = youtubePattern.search(url)
 		if match:
 			return url
 	return None
 
 def getActualURL(message):
-	pattern = re.compile("(http://(t\.co)\S*)")
+	pattern = re.compile("(http(s)?://(t\.co)\S*)")
 	match = pattern.search(message)
 	if match:
 		link = match.group()
