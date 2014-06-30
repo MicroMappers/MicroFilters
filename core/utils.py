@@ -1,14 +1,17 @@
-import json, csv, time, urllib2, os, hashlib, re
+import json, csv, time, urllib2, os, hashlib, re, logging
 from django.http import HttpResponse
 from django.core.cache import cache
 from core.models import *
 
+logger = logging.getLogger(__name__)
 APPID = {'textclicker': 78, 'imageclicker': 80, 'videoclicker': 82}
 
 def generateData(dataFile, app, source, cacheKey):
 	if source == "file":
 		extension = getFileExtension(dataFile)
+		logger.info("uploading local AIDR file: " + dataFile.name)
 	elif source == "url":
+		logger.info("fetching remote AIDR file: " + dataFile)
 		dataFile, extension = fetchFileFromURL(dataFile, cacheKey)
 		if dataFile == 'error':
 			return HttpResponse(status=400)
@@ -56,7 +59,7 @@ def processJSONInput(dataFile, app, cacheKey):
 			print "file written at", index
 
 	aidr_json.append(writeFile(data, app, cacheKey, offset))
-	updateAIDR(json.dumps(aidr_json))
+	updateAIDR(aidr_json)
 
 def processCSVInput(dataFile, app, cacheKey):
 	csvDict = csv.DictReader(dataFile)
@@ -87,16 +90,22 @@ def processCSVInput(dataFile, app, cacheKey):
 			data = []
 
 	aidr_json.append(writeFile(data, app, cacheKey, offset))
-	updateAIDR(json.dumps(aidr_json))
+	updateAIDR(aidr_json)
 
-def updateAIDR(json_data):
+def updateAIDR(data):
+	print 'sending update'
+	json_data = json.dumps(data)
 	data_len = len(json_data)
 	req = urllib2.Request("http://pybossa-dev.qcri.org/AIDRTrainerAPI/rest/source/save", json_data, {'Content-Type': 'application/json', 'Content-Length': data_len})
-	f = urllib2.urlopen(req)
-	response = f.read()
-	print response
-	f.close()
-	print 'done'
+	try:
+		f = urllib2.urlopen(req)
+		response = f.read()
+		print response
+		f.close()
+		logger.info("Successfully sent file(s) information to AIDR API. Information sent: " + str(data))
+	except Exception as e:
+		logger.error("Failed to send file(s) information to AIDR API. Error was: " + str(e) + ". Information not sent: " + str(data))
+	print "all done"
 
 def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 	datarow = {}
@@ -115,7 +124,7 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 			try: 
 				datarow["Tweet"] = message
 			except Exception as e:
-				print e
+				logger.error("Failed to get tweet message:" + e)
 
 		if app == 'imageclicker':
 			mediaLink = checkForPhotos(message)
@@ -138,7 +147,10 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 		try:
 			datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(creationTime, "%Y-%m-%dT%H:%MZ"))
 		except:
-			datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(creationTime, "%a %b %d %H:%M:%S +0000 %Y"))
+			try:
+				datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(creationTime, "%a %b %d %H:%M:%S +0000 %Y"))
+			except Exception as e:
+				logger.error("Failed to parse time of tweet: " + e + ". Original data was: " + creationTime)
 
 	tweetIds.append(tweetID)
 	return datarow
@@ -189,6 +201,7 @@ def writeFile(data, app, cacheKey, offset=""):
 	cache.set(cacheKey, cacheData)
 
 	outputfile.close()
+	logger.info("Successfully wrote file. Name: " + filename)
 	return { "fileUrl": "http://127.0.0.1:8000/static/output/" + filename, "appId": APPID[app] }
 
 def fetchFileFromURL(url, cacheKey):
@@ -203,6 +216,7 @@ def fetchFileFromURL(url, cacheKey):
 	elif response.headers.type == 'text/csv':
 		return response, '.csv' 
 	else:
+		logger.error("Failed attempting to get file from url: " + url + ". Incorrect response type.")
 		return 'error', 'error'
 
 def getFileExtension(dataFile):
