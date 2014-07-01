@@ -1,12 +1,15 @@
 import json, csv, time, urllib2, os, hashlib, re, logging
 from django.http import HttpResponse
 from django.core.cache import cache
+from dropbox.client import DropboxClient
+import StringIO
 from core.models import *
 
 logger = logging.getLogger(__name__)
 APPID = {'textclicker': 78, 'imageclicker': 80, 'videoclicker': 82}
 
-def generateData(dataFile, app, source, cacheKey):
+def generateData(dataFile, app, source, cacheKey, dropboxAccessToken):
+	dropboxClient = DropboxClient(dropboxAccessToken)
 	if source == "file":
 		extension = getFileExtension(dataFile)
 		logger.info("uploading local AIDR file: " + dataFile.name)
@@ -23,13 +26,13 @@ def generateData(dataFile, app, source, cacheKey):
 	# 	ProcessedFile.objects.create(sha256_hash=sha256_hash)
 
 	if extension == ".json":
-		processJSONInput(dataFile, app, cacheKey)
+		processJSONInput(dataFile, app, cacheKey, dropboxClient)
 	elif extension == ".csv":
-		processCSVInput(dataFile, app, cacheKey)
+		processCSVInput(dataFile, app, cacheKey, dropboxClient)
 
 	return HttpResponse(status=200)
 
-def processJSONInput(dataFile, app, cacheKey):
+def processJSONInput(dataFile, app, cacheKey, dropboxClient):
 	jsonObject = json.loads(dataFile.read())
 	tweetIds = []
 	aidr_json = []
@@ -38,10 +41,7 @@ def processJSONInput(dataFile, app, cacheKey):
 	data = []
 	offset = ""
 	
-	cacheData = cache.get(cacheKey)
-	cacheData['state'] = 'processing'
-	cacheData['progress'] = 50
-	cache.set(cacheKey, cacheData)
+	updateCacheData(cacheKey, 'processing', 50)
 
 	for index, row in enumerate(jsonObject):
 		tweetData = parseTweet(row.get("id"), row.get("text"), row.get("user").get("screen_name"), row.get("created_at"), tweetIds, app)
@@ -51,17 +51,23 @@ def processJSONInput(dataFile, app, cacheKey):
 			lineModifier = lineModifier + 1
 			continue
 
+		updateCacheData(cacheKey, 'writing', 75)
+
 		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
-			aidr_json.append(writeFile(data, app, cacheKey, offset))
+			aidr_json.append(writeFile(data, app, cacheKey, dropboxClient, offset))
 			line_limit += 1500
 			data = []
 			print "file written at", index
 
-	aidr_json.append(writeFile(data, app, cacheKey, offset))
-	updateAIDR(aidr_json)
 
-def processCSVInput(dataFile, app, cacheKey):
+	offset = "_"+str(line_limit/1500)
+	aidr_json.append(writeFile(data, app, cacheKey, dropboxClient, offset))
+	updateCacheData(cacheKey, 'done', 100)
+	updateAIDR(aidr_json)
+	
+
+def processCSVInput(dataFile, app, cacheKey, dropboxClient):
 	csvDict = csv.DictReader(dataFile)
 	line_limit = 1500
 	data = []
@@ -70,27 +76,29 @@ def processCSVInput(dataFile, app, cacheKey):
 	lineModifier = 0
 	offset = ""
 
-	cacheData = cache.get(cacheKey)
-	cacheData['state'] = 'processing'
-	cacheData['progress'] = 50
-	cache.set(cacheKey, cacheData)
+	updateCacheData(cacheKey, 'processing', 50)
 
 	for index, row in enumerate(csvDict):
-		tweetData = parseTweet(row["tweetID"], row["message"], row["userName"], row["createdAt"], tweetIds, app)
+		tweetData = parseTweet(row["tweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
 		if tweetData:
 			data.append(tweetData)
 		else:
 			lineModifier = lineModifier + 1
 			continue
 
+		updateCacheData(cacheKey, 'writing', 75)
+
 		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
-			aidr_json.append(writeFile(data, app, cacheKey, offset))
+			aidr_json.append(writeFile(data, app, cacheKey, dropboxClient, offset))
 			line_limit += 1500
 			data = []
 
-	aidr_json.append(writeFile(data, app, cacheKey, offset))
+	offset = "_"+str((line_limit/1500))
+	aidr_json.append(writeFile(data, app, cacheKey, dropboxClient, offset))
+	updateCacheData(cacheKey, 'done', 100)
 	updateAIDR(aidr_json)
+	
 
 def updateAIDR(data):
 	print 'sending update'
@@ -119,7 +127,7 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 		if 'RT ' in message:
 			return None
 		try:
-			datarow["Tweet"] = message.decode('utf-8').encode('ascii', 'ignore')
+			datarow["Tweet"] = message.encode('ascii', 'ignore')
 		except:
 			try: 
 				datarow["Tweet"] = message
@@ -181,28 +189,23 @@ def getActualURL(message):
 		return urllib2.urlopen(link).geturl()
 	return None
 
-def writeFile(data, app, cacheKey, offset=""):
+def writeFile(data, app, cacheKey, dropboxClient,  offset=""):
 	filename = app+time.strftime("%Y%m%d%H%M%S",time.localtime())+offset+'.csv'
-	outputfile = open("static/output/"+filename, "w")
-
-	cacheData = cache.get(cacheKey)
-	cacheData['state'] = 'writing'
-	cacheData['progress'] = 75
-	cache.set(cacheKey, cacheData)
+	outputfile = StringIO.StringIO()
 
 	writer = csv.DictWriter(outputfile, ["User-Name","Tweet","Time-stamp","Location","Latitude","Longitude","Image-link","TweetID"])
 	writer.writeheader()
 	for row in data:
 		writer.writerow(row)
 
-	cacheData = cache.get(cacheKey)
-	cacheData['state'] = 'done'
-	cacheData['progress'] = 100
-	cache.set(cacheKey, cacheData)
-
+	fileWriteResponse = dropboxClient.put_file('/MicroFilters/'+filename, outputfile)
+	fileShareResponse = dropboxClient.share('/MicroFilters/'+filename, short_url=True)
 	outputfile.close()
-	logger.info("Successfully wrote file. Name: " + filename)
-	return { "fileUrl": "http://127.0.0.1:8000/static/output/" + filename, "appId": APPID[app] }
+	logger.info("Successfully wrote file. Details: " + str(fileWriteResponse))
+	logger.info("Successfully shared file. Details: " + str(fileShareResponse))
+	return { "fileUrl": fileShareResponse['url'], "appId": APPID[app] }
+
+	
 
 def fetchFileFromURL(url, cacheKey):
 	cache.set(cacheKey, {
@@ -233,3 +236,9 @@ def hashfile(afile, hasher, blocksize=65536):
 def getCSVRowCount(csvDict):
 	rows = list(csvDict)
 	return len(rows)
+
+def updateCacheData(cacheKey, state, progress):
+	cacheData = cache.get(cacheKey)
+	cacheData['state'] = state
+	cacheData['progress'] = progress
+	cache.set(cacheKey, cacheData)
