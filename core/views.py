@@ -7,7 +7,9 @@ import urllib2, json
 
 def index(request):
 	if "dropbox-access-token" not in  request.session:
-		return redirect("dropbox-auth-start")
+		return render(request, "core/index.html", { "dropbox_not_authorized": "true" })
+	#REMEMBER TO REMOVE
+	#request.session.pop("dropbox-access-token")
 	return render(request, "core/index.html")
 
 def downloadPage(request):

@@ -8,6 +8,10 @@ function generateUUID() {
     return uuid;
 };
 
+function disableForm(state){
+  $("form#main-form").find(":input:not(:hidden)").attr('disabled', state)
+}
+
 $(document).ready(function() {
 	// $.getJSON( "/getAppList", function( data ) {
 	// 	var app_list = [];
@@ -33,7 +37,10 @@ $(document).ready(function() {
 	// }).fail(function() {
 	// 	$("#app-list").parent().append("<b>Could not fetch app list</b>");
 	// });
-
+      if(dropbox_not_authorized){
+        disableForm(true);
+        $('#dropboxModal').foundation('reveal', 'open');
+      }
   		//post the form via ajax
   		$("form#main-form").submit(function(event){
   			event.preventDefault();
@@ -49,6 +56,7 @@ $(document).ready(function() {
   			}
 
   		var formData = new FormData($(this)[0]);
+      disableForm(true);
         var uuid = generateUUID();
         //append the progress bar to the UI
         $('#message-box').html(''+
@@ -105,6 +113,7 @@ $(document).ready(function() {
 				    '</div>'+
 				    '');
 				    $(document).foundation('alert');
+            disableForm(false);
   				}
   			});
 	});//end submit
