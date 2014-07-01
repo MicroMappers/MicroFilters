@@ -48,8 +48,9 @@ def uploadProgress(request, uuid=None):
     """
     cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], uuid)
     data = cache.get(cache_key)
-
-    return HttpResponse(json.dumps(data))
+    if data:
+    	return HttpResponse(json.dumps(data))
+    return HttpResponse(json.dumps({progress: 5, received: 0, size: 0, state: "starting"}))
 
 
 def getDropboxAuthFlow(session):
