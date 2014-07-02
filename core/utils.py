@@ -22,7 +22,6 @@ def generateData(dataFile, app, source, cacheKey):
 	# else:
 	# 	ProcessedFile.objects.create(sha256_hash=sha256_hash)
 
-	updateCacheData(cacheKey, 'Processing', 50)
 	if extension == ".json":
 		processJSONInput(dataFile, app, cacheKey)
 	elif extension == ".csv":
@@ -39,6 +38,11 @@ def processJSONInput(dataFile, app, cacheKey):
 	data = []
 	offset = ""
 	
+	cacheData = cache.get(cacheKey)
+	cacheData['state'] = 'processing'
+	cacheData['progress'] = 50
+	cache.set(cacheKey, cacheData)
+
 	for index, row in enumerate(jsonObject):
 		tweetData = parseTweet(row.get("id"), row.get("text"), row.get("user").get("screen_name"), row.get("created_at"), tweetIds, app)
 		if tweetData:
@@ -47,8 +51,6 @@ def processJSONInput(dataFile, app, cacheKey):
 			lineModifier = lineModifier + 1
 			continue
 
-		updateCacheData(cacheKey, 'Writing Files', 75)
-
 		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
 			aidr_json.append(writeFile(data, app, cacheKey, offset))
@@ -56,9 +58,8 @@ def processJSONInput(dataFile, app, cacheKey):
 			data = []
 			print "file written at", index
 
-	offset = "_"+str(line_limit/1500)
 	aidr_json.append(writeFile(data, app, cacheKey, offset))
-	updateAIDR(aidr_json, cacheKey)
+	updateAIDR(aidr_json)
 
 def processCSVInput(dataFile, app, cacheKey):
 	csvDict = csv.DictReader(dataFile)
@@ -69,40 +70,42 @@ def processCSVInput(dataFile, app, cacheKey):
 	lineModifier = 0
 	offset = ""
 
+	cacheData = cache.get(cacheKey)
+	cacheData['state'] = 'processing'
+	cacheData['progress'] = 50
+	cache.set(cacheKey, cacheData)
+
 	for index, row in enumerate(csvDict):
-		tweetData = parseTweet(row["tweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
+		tweetData = parseTweet(row["tweetID"], row["message"], row["userName"], row["createdAt"], tweetIds, app)
 		if tweetData:
 			data.append(tweetData)
 		else:
 			lineModifier = lineModifier + 1
 			continue
 
-		updateCacheData(cacheKey, 'Writing Files', 75)
-
 		if index-lineModifier == line_limit:
-			offset = "_" + str(line_limit/1500)
+			offset = "_"+str(line_limit/1500)
 			aidr_json.append(writeFile(data, app, cacheKey, offset))
 			line_limit += 1500
 			data = []
 
-	offset = "_"+str((line_limit/1500))
 	aidr_json.append(writeFile(data, app, cacheKey, offset))
-	updateAIDR(aidr_json, cacheKey)
+	updateAIDR(aidr_json)
 
-def updateAIDR(data, cacheKey):
-	updateCacheData(cacheKey, 'Updating AIDR', 90)
+def updateAIDR(data):
+	print 'sending update'
 	json_data = json.dumps(data)
 	data_len = len(json_data)
 	req = urllib2.Request("http://pybossa-dev.qcri.org/AIDRTrainerAPI/rest/source/save", json_data, {'Content-Type': 'application/json', 'Content-Length': data_len})
 	try:
-		f = urllib2.urlopen(req, timeout=10)
+		f = urllib2.urlopen(req)
 		response = f.read()
 		print response
 		f.close()
 		logger.info("Successfully sent file(s) information to AIDR API. Information sent: " + str(data))
 	except Exception as e:
 		logger.error("Failed to send file(s) information to AIDR API. Error was: " + str(e) + ". Information not sent: " + str(data))
-	updateCacheData(cacheKey, 'Done', 100)
+	print "all done"
 
 def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 	datarow = {}
@@ -116,7 +119,7 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 		if 'RT ' in message:
 			return None
 		try:
-			datarow["Tweet"] = message.encode('ascii', 'ignore')
+			datarow["Tweet"] = message.decode('utf-8').encode('ascii', 'ignore')
 		except:
 			try: 
 				datarow["Tweet"] = message
@@ -182,20 +185,24 @@ def writeFile(data, app, cacheKey, offset=""):
 	filename = app+time.strftime("%Y%m%d%H%M%S",time.localtime())+offset+'.csv'
 	outputfile = open("static/output/"+filename, "w")
 
+	cacheData = cache.get(cacheKey)
+	cacheData['state'] = 'writing'
+	cacheData['progress'] = 75
+	cache.set(cacheKey, cacheData)
+
 	writer = csv.DictWriter(outputfile, ["User-Name","Tweet","Time-stamp","Location","Latitude","Longitude","Image-link","TweetID"])
 	writer.writeheader()
 	for row in data:
 		writer.writerow(row)
 
+	cacheData = cache.get(cacheKey)
+	cacheData['state'] = 'done'
+	cacheData['progress'] = 100
+	cache.set(cacheKey, cacheData)
+
 	outputfile.close()
 	logger.info("Successfully wrote file. Name: " + filename)
 	return { "fileUrl": "http://127.0.0.1:8000/static/output/" + filename, "appId": APPID[app] }
-
-def updateCacheData(cacheKey, state, progress):
-	cacheData = cache.get(cacheKey)
-	cacheData['state'] = state
-	cacheData['progress'] = progress
-	cache.set(cacheKey, cacheData)
 
 def fetchFileFromURL(url, cacheKey):
 	cache.set(cacheKey, {
