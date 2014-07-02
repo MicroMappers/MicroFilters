@@ -43,34 +43,11 @@ def getAppList(request):
 
 
 def uploadProgress(request, uuid=None):
-    """
-    Return JSON object with information about the progress of an upload.
-    """
-    cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], uuid)
-    data = cache.get(cache_key)
-    if data:
-    	return HttpResponse(json.dumps(data))
-    return HttpResponse(json.dumps({"progress": 5, "received": 0, "size": 0, "state": "starting"}))
-
-
-def getDropboxAuthFlow(session):
-	redirect_uri = "http://localhost:8000/dropboxAuthFinish"
-	return DropboxOAuth2Flow("e7p9scg0w7h1hr8", "sr2ex8pmjjgd7ut", redirect_uri, session, "dropbox-auth-csrf-token")
-
-def dropboxAuthStart(request):
-	authorize_url = getDropboxAuthFlow(request.session).start()
-	return HttpResponseRedirect(authorize_url)
-
-def dropboxAuthFinish(request):
-	try:
-		access_token, user_id, url_state = getDropboxAuthFlow(request.session).finish(request.GET)
-		request.session["dropbox-access-token"] = access_token
-		return redirect('index')
-	except DropboxOAuth2Flow.BadRequestException, e:
-		return HttpResponseRedirect("http://localhost:8000/dropboxAuthStart")
-	except DropboxOAuth2Flow.CsrfException, e:
-		return HttpResponseForbidden()
-	except DropboxOAuth2Flow.NotApprovedException, e:
-		raise e
-	except DropboxOAuth2Flow.ProviderException, e:
-		raise e
+	"""
+	Return JSON object with information about the progress of an upload.
+	"""
+	cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], uuid)
+	data = cache.get(cache_key)
+	if data:
+		return HttpResponse(json.dumps(data))
+	return HttpResponse(json.dumps({"progress": 5, "received": 0, "size": 0, "state": "starting"}))

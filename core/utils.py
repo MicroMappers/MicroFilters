@@ -25,6 +25,7 @@ def generateData(dataFile, app, source, cacheKey, dropboxAccessToken):
 	# else:
 	# 	ProcessedFile.objects.create(sha256_hash=sha256_hash)
 
+	updateCacheData(cacheKey, 'Processing', 50)
 	if extension == ".json":
 		processJSONInput(dataFile, app, cacheKey, dropboxClient)
 	elif extension == ".csv":
@@ -41,8 +42,6 @@ def processJSONInput(dataFile, app, cacheKey, dropboxClient):
 	data = []
 	offset = ""
 	
-	updateCacheData(cacheKey, 'processing', 50)
-
 	for index, row in enumerate(jsonObject):
 		tweetData = parseTweet(row.get("id"), row.get("text"), row.get("user").get("screen_name"), row.get("created_at"), tweetIds, app)
 		if tweetData:
@@ -51,7 +50,7 @@ def processJSONInput(dataFile, app, cacheKey, dropboxClient):
 			lineModifier = lineModifier + 1
 			continue
 
-		updateCacheData(cacheKey, 'writing', 75)
+		updateCacheData(cacheKey, 'Writing Files', 75)
 
 		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
@@ -60,12 +59,9 @@ def processJSONInput(dataFile, app, cacheKey, dropboxClient):
 			data = []
 			print "file written at", index
 
-
 	offset = "_"+str(line_limit/1500)
-	aidr_json.append(writeFile(data, app, cacheKey, dropboxClient, offset))
-	updateCacheData(cacheKey, 'done', 100)
-	updateAIDR(aidr_json)
-	
+	aidr_json.append(writeFile(data, app, cacheKey, offset))
+	updateAIDR(aidr_json, cacheKey)
 
 def processCSVInput(dataFile, app, cacheKey, dropboxClient):
 	csvDict = csv.DictReader(dataFile)
@@ -76,8 +72,6 @@ def processCSVInput(dataFile, app, cacheKey, dropboxClient):
 	lineModifier = 0
 	offset = ""
 
-	updateCacheData(cacheKey, 'processing', 50)
-
 	for index, row in enumerate(csvDict):
 		tweetData = parseTweet(row["tweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
 		if tweetData:
@@ -86,34 +80,32 @@ def processCSVInput(dataFile, app, cacheKey, dropboxClient):
 			lineModifier = lineModifier + 1
 			continue
 
-		updateCacheData(cacheKey, 'writing', 75)
+		updateCacheData(cacheKey, 'Writing Files', 75)
 
 		if index-lineModifier == line_limit:
-			offset = "_"+str(line_limit/1500)
-			aidr_json.append(writeFile(data, app, cacheKey, dropboxClient, offset))
+			offset = "_" + str(line_limit/1500)
+			aidr_json.append(writeFile(data, app, cacheKey, offset))
 			line_limit += 1500
 			data = []
 
 	offset = "_"+str((line_limit/1500))
-	aidr_json.append(writeFile(data, app, cacheKey, dropboxClient, offset))
-	updateCacheData(cacheKey, 'done', 100)
-	updateAIDR(aidr_json)
-	
+	aidr_json.append(writeFile(data, app, cacheKey, offset))
+	updateAIDR(aidr_json, cacheKey)
 
-def updateAIDR(data):
-	print 'sending update'
+def updateAIDR(data, cacheKey):
+	updateCacheData(cacheKey, 'Updating AIDR', 90)
 	json_data = json.dumps(data)
 	data_len = len(json_data)
 	req = urllib2.Request("http://pybossa-dev.qcri.org/AIDRTrainerAPI/rest/source/save", json_data, {'Content-Type': 'application/json', 'Content-Length': data_len})
 	try:
-		f = urllib2.urlopen(req)
+		f = urllib2.urlopen(req, timeout=10)
 		response = f.read()
 		print response
 		f.close()
 		logger.info("Successfully sent file(s) information to AIDR API. Information sent: " + str(data))
 	except Exception as e:
 		logger.error("Failed to send file(s) information to AIDR API. Error was: " + str(e) + ". Information not sent: " + str(data))
-	print "all done"
+	updateCacheData(cacheKey, 'Done', 100)
 
 def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 	datarow = {}
@@ -191,21 +183,25 @@ def getActualURL(message):
 
 def writeFile(data, app, cacheKey, dropboxClient,  offset=""):
 	filename = app+time.strftime("%Y%m%d%H%M%S",time.localtime())+offset+'.csv'
-	outputfile = StringIO.StringIO()
+	outputfile = open("static/output/"+filename, "w")
 
 	writer = csv.DictWriter(outputfile, ["User-Name","Tweet","Time-stamp","Location","Latitude","Longitude","Image-link","TweetID"])
 	writer.writeheader()
 	for row in data:
 		writer.writerow(row)
 
-	fileWriteResponse = dropboxClient.put_file('/MicroFilters/'+filename, outputfile)
-	fileShareResponse = dropboxClient.share('/MicroFilters/'+filename, short_url=True)
 	outputfile.close()
 	logger.info("Successfully wrote file. Details: " + str(fileWriteResponse))
 	logger.info("Successfully shared file. Details: " + str(fileShareResponse))
 	return { "fileUrl": fileShareResponse['url'], "appId": APPID[app] }
 
 	
+
+def updateCacheData(cacheKey, state, progress):
+	cacheData = cache.get(cacheKey)
+	cacheData['state'] = state
+	cacheData['progress'] = progress
+	cache.set(cacheKey, cacheData)
 
 def fetchFileFromURL(url, cacheKey):
 	cache.set(cacheKey, {
