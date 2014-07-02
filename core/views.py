@@ -38,10 +38,11 @@ def getAppList(request):
 
 
 def uploadProgress(request, uuid=None):
-    """
-    Return JSON object with information about the progress of an upload.
-    """
-    cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], uuid)
-    data = cache.get(cache_key)
-
-    return HttpResponse(json.dumps(data))
+	"""
+	Return JSON object with information about the progress of an upload.
+	"""
+	cache_key = "%s_%s" % (request.META['REMOTE_ADDR'], uuid)
+	data = cache.get(cache_key)
+	if data:
+		return HttpResponse(json.dumps(data))
+	return HttpResponse(json.dumps({"progress": 5, "received": 0, "size": 0, "state": "starting"}))
