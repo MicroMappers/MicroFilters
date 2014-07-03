@@ -4,6 +4,8 @@ from django.http import HttpResponse, HttpResponseServerError
 import utils
 import urllib2, json
 
+Progress = 0
+
 def index(request):
 	return render(request, "core/index.html")
 
@@ -45,4 +47,6 @@ def uploadProgress(request, uuid=None):
 	data = cache.get(cache_key)
 	if data:
 		return HttpResponse(json.dumps(data))
-	return HttpResponse(json.dumps({"progress": 5, "received": 0, "size": 0, "state": "starting"}))
+	if Progress < 50:
+		Progress += 1
+	return HttpResponse(json.dumps({"progress": Progress, "received": 0, "size": 0, "state": "Starting"}))
