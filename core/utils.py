@@ -99,7 +99,7 @@ def updateAIDR(data, cacheKey):
 	data_len = len(json_data)
 	req = urllib2.Request(AIDRTRAINERAPI, json_data, {'Content-Type': 'application/json', 'Content-Length': data_len})
 	try:
-		f = urllib2.urlopen(req, timeout=10)
+		f = urllib2.urlopen(req, timeout=15)
 		response = f.read()
 		print response
 		f.close()
@@ -193,7 +193,7 @@ def writeFile(data, app, cacheKey, offset=""):
 
 	outputfile.close()
 	logger.info("Successfully wrote file. Name: " + filename)
-	return { "fileUrl": settings.SITE_URL + "static/output/" + filename, "appId": APPID[app] }
+	return { "fileUrl": str(settings.SITE_URL + "static/output/" + filename), "appId": APPID[app] }
 
 def updateCacheData(cacheKey, state, progress):
 	cacheData = cache.get(cacheKey)
