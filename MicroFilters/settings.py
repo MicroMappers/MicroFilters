@@ -20,10 +20,10 @@ SITE_URL = 'http://qcricl1linuxvm2.cloudapp.net:8090/'
 SECRET_KEY = '*2=%u9z8i1^hsqp@d7kp)!z#vd6psxqm13)gu@$5#p(9d0m)n+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-TEMPLATE_DEBUG = True
+DEBUG = False
+TEMPLATE_DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = (
