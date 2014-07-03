@@ -45,7 +45,4 @@ def uploadProgress(request, uuid=None):
     data = cache.get(cache_key)
     if data:
     	return HttpResponse(json.dumps(data))
-    return HttpResponse({
-            'state': 'starting',
-            'progress': 10
-        })
+    return HttpResponse(json.dumps({"progress": 15, "received": 0, "size": 0, "state": "starting"}))
