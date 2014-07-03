@@ -1,10 +1,12 @@
 import json, csv, time, urllib2, os, hashlib, re, logging
+from django.conf import settings
 from django.http import HttpResponse
 from django.core.cache import cache
 from core.models import *
 
 logger = logging.getLogger(__name__)
 APPID = {'textclicker': 78, 'imageclicker': 80, 'videoclicker': 82}
+AIDRTRAINERAPI = "http://qcricl1linuxvm1.cloudapp.net:8084/AIDRTrainerAPI/rest/deployment/active"
 
 def generateData(dataFile, app, source, cacheKey):
 	if source == "file":
@@ -95,7 +97,7 @@ def updateAIDR(data, cacheKey):
 	updateCacheData(cacheKey, 'Updating AIDR', 90)
 	json_data = json.dumps(data)
 	data_len = len(json_data)
-	req = urllib2.Request("http://pybossa-dev.qcri.org/AIDRTrainerAPI/rest/source/save", json_data, {'Content-Type': 'application/json', 'Content-Length': data_len})
+	req = urllib2.Request(AIDRTRAINERAPI, json_data, {'Content-Type': 'application/json', 'Content-Length': data_len})
 	try:
 		f = urllib2.urlopen(req, timeout=10)
 		response = f.read()
@@ -191,7 +193,7 @@ def writeFile(data, app, cacheKey, offset=""):
 
 	outputfile.close()
 	logger.info("Successfully wrote file. Name: " + filename)
-	return { "fileUrl": "http://127.0.0.1:8000/static/output/" + filename, "appId": APPID[app] }
+	return { "fileUrl": settings.SITE_URL + "static/output/" + filename, "appId": APPID[app] }
 
 def updateCacheData(cacheKey, state, progress):
 	cacheData = cache.get(cacheKey)
