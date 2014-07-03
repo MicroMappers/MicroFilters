@@ -51,19 +51,4 @@
 </div>
 
 <div class="footer"></div>
-<div id="dropboxModal" class="reveal-modal medium" data-reveal>
-  <h2 class="text-center">Dropbox Authentication</h2>
-  <p class="text-center">Microfilters will need to save files to your Dropbox. In order to do this, you'll need to authorize Microfilters on Dropbox.</p>
-  <p class="text-center"><a href="/dropboxAuthStart/" class="button">Authorize Microfilters on Dropbox</a></p>
-  <a class="close-reveal-modal">&#215;</a>
-</div>
-{% if dropbox_not_authorized %}
-<script>
-	var dropbox_not_authorized = {{ dropbox_not_authorized }};
-</script>
-{% else %}
-<script>
-	var dropbox_not_authorized = false;
-</script>
-{% endif %}
 {% endblock %}
