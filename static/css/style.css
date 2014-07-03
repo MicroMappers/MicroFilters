@@ -61,6 +61,19 @@ button {
 	text-align: center;
 }
 
+#message-box {
+	padding: 0 !important;
+}
+.meter {
+	height: 43px;
+	padding: 0.875rem 1.5rem 0.875rem 0.875rem;
+	color: white;
+	font-size: 0.8125rem;
+}
+.progress {
+	height: 43px;
+}
+
 .main {
 	padding-bottom: 100px;
 }

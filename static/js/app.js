@@ -8,7 +8,90 @@ function generateUUID() {
     return uuid;
 };
 
+function disableForm(state){
+	$("form#main-form").find(":input:not(:hidden)").attr('disabled', state)
+}
+
 $(document).ready(function() {
+	// getAppList();
+	//post the form via ajax
+	$("form#main-form").submit(function(event) {
+		event.preventDefault();
+		if ($("#app-list option:selected").attr("value") == 'none') {
+			$("#message-box").html(''+
+				'<div data-alert class="alert-box alert">'+
+					 'You have to select an app type'+
+				 	 '<a href="#" class="close">&times;</a>'+
+		    '</div>'+
+		    '');
+			$(document).foundation('alert');
+			return false;
+		} else if (document.getElementById('data-file').value == '') {
+			$("#message-box").html(''+
+				'<div data-alert class="alert-box alert">'+
+					 'Bad request: No file attached.'+
+				 	 '<a href="#" class="close">&times;</a>'+
+		    '</div>'+
+			'');
+			$(document).foundation('alert');
+			return false;
+		}
+
+  		var formData = new FormData($(this)[0]);
+  		disableForm(true);
+        var uuid = generateUUID();
+        //append the progress bar to the UI
+        $('#message-box').html(''+
+            '<div class="progress success">'+
+                '<span class="meter" style="width: 0%"></span>'+
+            '</div>');
+        var progressBar = $('.meter');
+
+        function updateProgressInfo() { 
+			$.getJSON('/uploadProgress/'+uuid, function(data) { 
+				console.log(data);
+				progressBar.css({ width: parseInt(data['progress'])+'%' });
+				progressBar.text(data['state']);
+				if (data['state'] == 'Done')
+					window.clearInterval(window.checkProgress);
+			});
+        }
+        
+        window.checkProgress = window.setInterval(updateProgressInfo, 1000);
+		$.ajax({
+			url: '/download/?X-Progress-ID='+uuid,
+			type: 'POST',
+			data: formData,
+			async: true,
+			cache: false,
+			contentType: false,
+			processData: false,
+			statusCode: {
+				400: function() {
+						$("#message-box").html(''+
+	  					'<div data-alert class="alert-box alert">'+
+	 						 'Bad request: No file attached.'+
+	  					 	 '<a href="#" class="close">&times;</a>'+
+					    '</div>'+
+					    '');
+						$(document).foundation('alert');
+				}
+			},
+			success: function(response) {
+				$("#message-box").html(''+
+					'<div data-alert class="alert-box success">'+
+						 'File was processed successfully'+
+					 	 '<a href="#" class="close">&times;</a>'+
+				    '</div>'+
+			    '');
+			    $(document).foundation('alert');
+	    		disableForm(false);
+			}
+		});
+	});//end submit
+});//end document ready
+
+// function getAppList() {
 	// $.getJSON( "/getAppList", function( data ) {
 	// 	var app_list = [];
 	// 	$.each( data, function( key, val ) {
@@ -33,80 +116,4 @@ $(document).ready(function() {
 	// }).fail(function() {
 	// 	$("#app-list").parent().append("<b>Could not fetch app list</b>");
 	// });
-
-  		//post the form via ajax
-  		$("form#main-form").submit(function(event){
-  			event.preventDefault();
-  			if($("#app-list option:selected").attr("value") == 'none'){
-  				$("#message-box").html(''+
-  					'<div data-alert class="alert-box alert">'+
- 						 'You have to select an app type'+
-  					 	 '<a href="#" class="close">&times;</a>'+
-				    '</div>'+
-				    '');
-  				$(document).foundation('alert');
-  				return false;
-  			}
-
-  		var formData = new FormData($(this)[0]);
-        var uuid = generateUUID();
-        //append the progress bar to the UI
-        $('#message-box').html(''+
-            '<div class="progress success">'+
-                '<span class="meter" style="width: 0%"></span>'+
-            '</div>');
-        var progressBar = $('.meter');
-        
-        function updateProgressInfo(){ 
-          $.getJSON('/uploadProgress/'+uuid, function(data){ 
-            console.log(data);
-            if( data['state'] == 'done'){
-                progressBar.css({
-                    width: parseInt(data['progress'])+'%'
-                });
-              return true;
-            }
-            else{
-                progressBar.css({
-                    width: parseInt(data['progress'])+'%'
-                });
-            }
-            window.setTimeout(updateProgressInfo, 1000);
-          });
-        }
-
-        window.setTimeout(updateProgressInfo, 1000);
-        
-
-  			$.ajax({
-  				url: '/download/?X-Progress-ID='+uuid,
-  				type: 'POST',
-  				data: formData,
-  				async: true,
-  				cache: false,
-  				contentType: false,
-  				processData: false,
-  				statusCode: {
-    				400: function() {
-      					$("#message-box").html(''+
-		  					'<div data-alert class="alert-box alert">'+
-		 						 'Bad request: No file attached.'+
-		  					 	 '<a href="#" class="close">&times;</a>'+
-						    '</div>'+
-						    '');
-      					$(document).foundation('alert');
-    				}
-  				},
-  				success: function(response){
-  					$("#message-box").html(''+
-  					'<div data-alert class="alert-box success">'+
- 						 'File was processed successfully'+
-  					 	 '<a href="#" class="close">&times;</a>'+
-				    '</div>'+
-				    '');
-				    $(document).foundation('alert');
-  				}
-  			});
-	});//end submit
-
-});//end document ready
+// }
