@@ -76,7 +76,7 @@ def processCSVInput(dataFile, app, cacheKey):
 	cache.set(cacheKey, cacheData)
 
 	for index, row in enumerate(csvDict):
-		tweetData = parseTweet(row["tweetID"], row["message"], row["userName"], row["createdAt"], tweetIds, app)
+		tweetData = parseTweet(row["tweetID"], row["message"].decode('utf-8'), row["userName"], row["createdAt"], tweetIds, app)
 		if tweetData:
 			data.append(tweetData)
 		else:
@@ -88,7 +88,9 @@ def processCSVInput(dataFile, app, cacheKey):
 			aidr_json.append(writeFile(data, app, cacheKey, offset))
 			line_limit += 1500
 			data = []
-
+			
+	if offset:
+		offset = "_"+str(line_limit/1500)
 	aidr_json.append(writeFile(data, app, cacheKey, offset))
 	updateAIDR(aidr_json)
 
@@ -119,7 +121,7 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 		if 'RT ' in message:
 			return None
 		try:
-			datarow["Tweet"] = message.decode('utf-8').encode('ascii', 'ignore')
+			datarow["Tweet"] = message.encode('ascii', 'ignore')
 		except:
 			try: 
 				datarow["Tweet"] = message
