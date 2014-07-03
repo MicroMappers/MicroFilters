@@ -56,7 +56,8 @@ def processJSONInput(dataFile, app, cacheKey):
 			data = []
 			print "file written at", index
 
-	offset = "_"+str(line_limit/1500)
+	if offset:
+		offset = "_"+str(line_limit/1500)
 	aidr_json.append(writeFile(data, app, cacheKey, offset))
 	updateAIDR(aidr_json, cacheKey)
 
@@ -85,7 +86,8 @@ def processCSVInput(dataFile, app, cacheKey):
 			line_limit += 1500
 			data = []
 
-	offset = "_"+str((line_limit/1500))
+	if offset:
+		offset = "_"+str((line_limit/1500))
 	aidr_json.append(writeFile(data, app, cacheKey, offset))
 	updateAIDR(aidr_json, cacheKey)
 
