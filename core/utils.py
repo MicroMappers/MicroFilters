@@ -6,7 +6,7 @@ from core.models import *
 
 logger = logging.getLogger(__name__)
 APPID = {'textclicker': 78, 'imageclicker': 80, 'videoclicker': 82}
-AIDRTRAINERAPI = "http://qcricl1linuxvm1.cloudapp.net:8084/AIDRTrainerAPI/rest/deployment/active"
+AIDRTRAINERAPI = "http://qcricl1linuxvm1.cloudapp.net:8084/AIDRTrainerAPI/rest/source/save"
 
 def generateData(dataFile, app, source, cacheKey):
 	if source == "file":
