@@ -13,7 +13,7 @@ function disableForm(state){
 }
 
 $(document).ready(function() {
-	// getAppList();
+	getAppList();
 	//post the form via ajax
 	$("form#main-form").submit(function(event) {
 		event.preventDefault();
@@ -91,29 +91,30 @@ $(document).ready(function() {
 	});//end submit
 });//end document ready
 
-// function getAppList() {
-	// $.getJSON( "/getAppList", function( data ) {
-	// 	var app_list = [];
-	// 	$.each( data, function( key, val ) {
-	// 		app_list.push( "<li><input type='radio' name='app' value='"+val.appTypeName.replace(/ /g, "").toLocaleLowerCase()+"' appid='" + val.clientAppID + "'>" + val.appTypeName + "</input></li>" );
-	// 		choices = JSON.parse(val.choices);
-	// 		choice_list = [];
-	// 		$.each(choices, function(key2, val2){
-	// 			choice_list.push("<li><input value='"+val2.qa+"' id='"+key2+"' type='checkbox'><label for='"+key2+"'>"+val2.qa+"</label></li>")
-	// 		});
-	// 		$("#choice-list").append("<li class='app_choices' id='"+val.clientAppID+"_choices'><ul></ul></li>");
-	// 		$("#"+val.clientAppID+"_choices").hide();
-	// 		$("#"+val.clientAppID+"_choices").append(choice_list);
-	// 	});
-	// 	$("#app-list").append(app_list);
+function getAppList() {
+	$.getJSON( "/getAppList", function( data ) {
+		var app_list = [];
+		$.each( data, function( key, val ) {
+			app_list.push( "<li><input type='radio' name='app' value='"+val.appTypeName.replace(/ /g, "").toLocaleLowerCase()+"' appid='" + val.clientAppID + "'>" + val.appTypeName + "</input></li>" );
+			choices = JSON.parse(val.choices);
+			choice_list = [];
+			$.each(choices, function(key2, val2){
+				choice_list.push("<li><input value='"+val2.qa+"' id='"+key2+"' type='checkbox'>"+val2.qa+"</input></li>")
+			});
+			$("#choice-list ul").append("<li class='app_choices' id='"+val.clientAppID+"_choices'><ul></ul></li>");
+			$("#"+val.clientAppID+"_choices").hide();
+			$("#"+val.clientAppID+"_choices ul").append(choice_list);
+		});
+		$("#app-list ul").append(app_list);
 
-	// 	//populate app list
-	//     $("#app-list input[name=app]").on("click", function() {
-	// 		$("#choice-list .app_choices").hide();
-	//       	if ($("#app-list input:checked").attr('appid'))
-	//       		$("#"+$("#app-list input:checked").attr('appid')+"_choices").show();
-	//     });
-	// }).fail(function() {
-	// 	$("#app-list").parent().append("<b>Could not fetch app list</b>");
-	// });
-// }
+		//populate app list
+	    $("#app-list input[name=app]").on("click", function() {
+			$("#choice-list .app_choices").hide();
+			var appId = $("#app-list input:checked").attr('appid');
+	      	if (appId)
+	      		$("#" + appId + "_choices").show();
+	    });
+	}).fail(function() {
+		$("#app-list").parent().append("<b>Could not fetch app list</b>");
+	});
+}
