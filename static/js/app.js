@@ -38,6 +38,7 @@ $(document).ready(function() {
 		}
 
   		var formData = new FormData($(this)[0]);
+  		formData.append('appID', $(this).find("#app-list option:selected").attr("appid"));
   		disableForm(true);
         var uuid = generateUUID();
         //append the progress bar to the UI
@@ -95,25 +96,13 @@ function getAppList() {
 	$.getJSON( "/getAppList", function( data ) {
 		var app_list = [];
 		$.each( data, function( key, val ) {
-			app_list.push( "<li><input type='radio' name='app' value='"+val.appTypeName.replace(/ /g, "").toLocaleLowerCase()+"' appid='" + val.clientAppID + "'>" + val.appTypeName + "</input></li>" );
-			choices = JSON.parse(val.choices);
-			choice_list = [];
-			$.each(choices, function(key2, val2){
-				choice_list.push("<li><input value='"+val2.qa+"' id='"+key2+"' type='checkbox'>"+val2.qa+"</input></li>")
-			});
-			$("#choice-list ul").append("<li class='app_choices' id='"+val.clientAppID+"_choices'><ul></ul></li>");
-			$("#"+val.clientAppID+"_choices").hide();
-			$("#"+val.clientAppID+"_choices ul").append(choice_list);
+			if (val.clientAppName == 'TextClicker' || val.clientAppName == 'Text Clicker' || val.clientAppName == 'ImageClicker' || val.clientAppName == 'Image Clicker' || val.clientAppName == 'VideoClicker' || val.clientAppName == 'Video Clicker')
+				var appTypeText = '';
+			else
+				var appTypeText = ' [' + val.appTypeName + ']';
+			app_list.push( "<option value='"+val.appTypeName.replace(/ /g, "").toLocaleLowerCase()+"' appid='" + val.clientAppID + "'>" + val.clientAppName + appTypeText + "</option>" );
 		});
-		$("#app-list ul").append(app_list);
-
-		//populate app list
-	    $("#app-list input[name=app]").on("click", function() {
-			$("#choice-list .app_choices").hide();
-			var appId = $("#app-list input:checked").attr('appid');
-	      	if (appId)
-	      		$("#" + appId + "_choices").show();
-	    });
+		$("#app-list select").append(app_list);
 	}).fail(function() {
 		$("#app-list").parent().append("<b>Could not fetch app list</b>");
 	});

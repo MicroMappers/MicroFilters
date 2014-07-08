@@ -12,10 +12,11 @@ def index(request):
 def downloadPage(request):
 	if request.method == "POST":
 		cacheKey = "%s_%s" % (request.META['REMOTE_ADDR'], request.GET.get("X-Progress-ID") )
+		print request.POST.get('appID')
 		if request.FILES.get('data-file'):
-			return utils.generateData(request.FILES.get('data-file'),request.POST.get('app'), "file", cacheKey)
+			return utils.generateData(request.FILES.get('data-file'), request.POST.get('app'), request.POST.get('appID'), "file", cacheKey)
 		elif request.POST.get("data-url"):
-			return utils.generateData(request.POST.get("data-url"),request.POST.get('app'), "url", cacheKey)
+			return utils.generateData(request.POST.get("data-url"), request.POST.get('app'), request.POST.get('appID'), "url", cacheKey)
 		else:
 			return HttpResponse(status=400)
 	else:
@@ -25,9 +26,10 @@ def downloadPage(request):
 # CORS issue, can't fetch directly from front-end
 def getAppList(request):
 	try:
-		appList = urllib2.urlopen("http://pybossa-dev.qcri.org/AIDRTrainerAPI/rest/deployment/active")
+		appList = urllib2.urlopen("http://qcricl1linuxvm1.cloudapp.net:8084/AIDRTrainerAPI/rest/deployment/active", timeout=15)
 		responseString = appList.read()
-
+		if responseString == []:
+			raise ValueError
 		#backup the applist locally
 		appListFile = open('static/fallback/applist.json', 'w')
 		appListFile.write(responseString)
