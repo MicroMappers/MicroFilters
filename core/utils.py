@@ -5,10 +5,9 @@ from django.core.cache import cache
 from core.models import *
 
 logger = logging.getLogger(__name__)
-APPID = {'textclicker': 78, 'imageclicker': 80, 'videoclicker': 82}
 AIDRTRAINERAPI = "http://qcricl1linuxvm1.cloudapp.net:8084/AIDRTrainerAPI/rest/deployment/active"
 
-def generateData(dataFile, app, source, cacheKey):
+def generateData(dataFile, app, appId, source, cacheKey):
 	if source == "file":
 		extension = getFileExtension(dataFile)
 		logger.info("uploading local AIDR file: " + dataFile.name)
@@ -26,13 +25,13 @@ def generateData(dataFile, app, source, cacheKey):
 
 	updateCacheData(cacheKey, 'Processing', 50)
 	if extension == ".json":
-		processJSONInput(dataFile, app, cacheKey)
+		processJSONInput(dataFile, app, appId, cacheKey)
 	elif extension == ".csv":
-		processCSVInput(dataFile, app, cacheKey)
+		processCSVInput(dataFile, app, appId, cacheKey)
 
 	return HttpResponse(status=200)
 
-def processJSONInput(dataFile, app, cacheKey):
+def processJSONInput(dataFile, app, appId, cacheKey):
 	jsonObject = json.loads(dataFile.read())
 	tweetIds = []
 	aidr_json = []
@@ -53,17 +52,17 @@ def processJSONInput(dataFile, app, cacheKey):
 
 		if index-lineModifier == line_limit:
 			offset = "_"+str(line_limit/1500)
-			aidr_json.append(writeFile(data, app, cacheKey, offset))
+			aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
 			line_limit += 1500
 			data = []
 			print "file written at", index
 
 	if offset:
 		offset = "_"+str(line_limit/1500)
-	aidr_json.append(writeFile(data, app, cacheKey, offset))
+	aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
 	updateAIDR(aidr_json, cacheKey)
 
-def processCSVInput(dataFile, app, cacheKey):
+def processCSVInput(dataFile, app, appId, cacheKey):
 	csvDict = csv.DictReader(dataFile)
 	line_limit = 1500
 	data = []
@@ -84,13 +83,13 @@ def processCSVInput(dataFile, app, cacheKey):
 
 		if index-lineModifier == line_limit:
 			offset = "_" + str(line_limit/1500)
-			aidr_json.append(writeFile(data, app, cacheKey, offset))
+			aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
 			line_limit += 1500
 			data = []
 
 	if offset:
 		offset = "_"+str((line_limit/1500))
-	aidr_json.append(writeFile(data, app, cacheKey, offset))
+	aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
 	updateAIDR(aidr_json, cacheKey)
 
 def updateAIDR(data, cacheKey):
@@ -182,7 +181,7 @@ def getActualURL(message):
 		return urllib2.urlopen(link).geturl()
 	return None
 
-def writeFile(data, app, cacheKey, offset=""):
+def writeFile(data, app, appId, cacheKey, offset=""):
 	filename = app+time.strftime("%Y%m%d%H%M%S",time.localtime())+offset+'.csv'
 	outputfile = open("static/output/"+filename, "w")
 
@@ -193,7 +192,7 @@ def writeFile(data, app, cacheKey, offset=""):
 
 	outputfile.close()
 	logger.info("Successfully wrote file. Name: " + filename)
-	return { "fileUrl": str(settings.SITE_URL + "static/output/" + filename), "appId": APPID[app] }
+	return { "fileUrl": str(settings.SITE_URL + "static/output/" + filename), "appId":  appId }
 
 def updateCacheData(cacheKey, state, progress):
 	cacheData = cache.get(cacheKey)
