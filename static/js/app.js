@@ -51,13 +51,16 @@ $(document).ready(function() {
         function updateProgressInfo() { 
 			$.getJSON('/uploadProgress/'+uuid, function(data) { 
 				console.log(data);
-				progressBar.css({ width: parseInt(data['progress'])+'%' });
+				if (window.progressLevel < parseInt(data['progress']))
+					window.progressLevel = parseInt(data['progress']);
+				progressBar.css({ width: window.progressLevel+'%' });
 				progressBar.text(data['state']);
 				if (data['state'] == 'Done')
 					window.clearInterval(window.checkProgress);
 			});
         }
-        
+
+        window.progressLevel = 0;
         window.checkProgress = window.setInterval(updateProgressInfo, 1000);
 		$.ajax({
 			url: '/download/?X-Progress-ID='+uuid,
