@@ -51,9 +51,10 @@ button {
 #app-list input {
 	padding: 10px;
 }
-#choice-list {
-	text-align: center;
+.app-selector {
+	display: none;
 }
+
 #or {
 	margin-bottom: 1rem;
 	text-align: center;

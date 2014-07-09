@@ -2,7 +2,7 @@
 {% block content %}
 <div class='header'>
 	<div class="row">
-		<h1 class="large-8 columns small-centered"><img src="/static/img/mm_logo.png" height="62" width="62" alt="">MicroFilters</h1>
+		<h1 class="large-8 columns small-centered"><img src="/static/img/mm_logo.png" height="62" width="62" alt=""/>MicroFilters</h1>
 	</div>
 </div>
 
@@ -16,8 +16,14 @@
 				<div class="large-10 columns small-centered">
 					<div class='panel'>
 						<h3>Select App Type</h3>
-						<div id="app-list" class='large-8 columns small-centered'><select name='app'>
-						</select></div>
+						<div id="app-list"><ul>
+							<li><input type='radio' name='app' value='textclicker'>Text Clicker</input></li>
+							<li><input type='radio' name='app' value='imageclicker'>Image Clicker</input></li>
+							<li><input type='radio' name='app' value='videoclicker'>Video Clicker</input></li>
+						</ul></div>
+						<div id="textclicker" class='large-8 columns small-centered app-selector'><select name='textclicker-app'></select></div>
+						<div id="imageclicker" class='large-8 columns small-centered app-selector'><select name='imageclicker-app'></select></div>
+						<div id="videoclicker" class='large-8 columns small-centered app-selector'><select name='videoclicker-app'></select></div>
 					</div>
 				</div>
 			</div>

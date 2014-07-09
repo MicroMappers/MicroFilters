@@ -26,7 +26,7 @@ def downloadPage(request):
 # CORS issue, can't fetch directly from front-end
 def getAppList(request):
 	try:
-		appList = urllib2.urlopen("http://qcricl1linuxvm1.cloudapp.net:8084/AIDRTrainerAPI/rest/deployment/active", timeout=15)
+		appList = urllib2.urlopen("http://qcricl1linuxvm2.cloudapp.net:8081/AIDRTrainerAPI/rest/deployment/active", timeout=15)
 		responseString = appList.read()
 		if responseString == []:
 			raise ValueError

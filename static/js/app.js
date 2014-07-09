@@ -14,6 +14,11 @@ function disableForm(state){
 
 $(document).ready(function() {
 	getAppList();
+	$("#app-list input[name=app]").click(function() {
+		$(".app-selector").hide();
+		$("#" + $(this).val()).show();
+	});
+
 	//post the form via ajax
 	$("form#main-form").submit(function(event) {
 		event.preventDefault();
@@ -38,7 +43,7 @@ $(document).ready(function() {
 		}
 
   		var formData = new FormData($(this)[0]);
-  		formData.append('appID', $(this).find("#app-list option:selected").attr("appid"));
+  		formData.append('appID', $('select[name=' + $("#app-list input[name=app]:checked").val() + '-app] option:selected').val());
   		disableForm(true);
         var uuid = generateUUID();
         //append the progress bar to the UI
@@ -97,15 +102,20 @@ $(document).ready(function() {
 
 function getAppList() {
 	$.getJSON( "/getAppList", function( data ) {
-		var app_list = [];
+		var text_list = [];
+		var image_list = [];
+		var video_list = [];
 		$.each( data, function( key, val ) {
-			if (val.clientAppName == 'TextClicker' || val.clientAppName == 'Text Clicker' || val.clientAppName == 'ImageClicker' || val.clientAppName == 'Image Clicker' || val.clientAppName == 'VideoClicker' || val.clientAppName == 'Video Clicker')
-				var appTypeText = '';
-			else
-				var appTypeText = ' [' + val.appTypeName + ']';
-			app_list.push( "<option value='"+val.appTypeName.replace(/ /g, "").toLocaleLowerCase()+"' appid='" + val.clientAppID + "'>" + val.clientAppName + appTypeText + "</option>" );
+			if (val.appTypeName == 'TextClicker' || val.appTypeName == 'Text Clicker')
+				text_list.push( "<option value='" + val.clientAppID + "'>" + val.clientAppName + "</option>" );
+			else if (val.appTypeName == 'ImageClicker' || val.appTypeName == 'Image Clicker')
+				image_list.push( "<option value='" + val.clientAppID + "'>" + val.clientAppName + "</option>" );
+			else if (val.appTypeName == 'VideoClicker' || val.appTypeName == 'Video Clicker')
+				video_list.push( "<option value='" + val.clientAppID + "'>" + val.clientAppName + "</option>" );
 		});
-		$("#app-list select").append(app_list);
+		$("#textclicker select").append(text_list);
+		$("#imageclicker select").append(image_list);
+		$("#videoclicker select").append(video_list);
 	}).fail(function() {
 		$("#app-list").parent().append("<b>Could not fetch app list</b>");
 	});

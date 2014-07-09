@@ -5,7 +5,7 @@ from django.core.cache import cache
 from core.models import *
 
 logger = logging.getLogger(__name__)
-AIDRTRAINERAPI = "http://qcricl1linuxvm1.cloudapp.net:8084/AIDRTrainerAPI/rest/source/save"
+AIDRTRAINERAPI = "http://qcricl1linuxvm2.cloudapp.net:8081/AIDRTrainerAPI/rest/source/save"
 
 def generateData(dataFile, app, appId, source, cacheKey):
 	if source == "file":
