@@ -31,7 +31,7 @@ $(document).ready(function() {
 		    '');
 			$(document).foundation('alert');
 			return false;
-		} else if (document.getElementById('data-file').value == '') {
+		} else if (document.getElementById('data-file').value == '' && document.getElementById('data-url').value == '') {
 			$("#message-box").html(''+
 				'<div data-alert class="alert-box alert">'+
 					 'Bad request: No file attached.'+
@@ -79,11 +79,12 @@ $(document).ready(function() {
 				400: function() {
 						$("#message-box").html(''+
 	  					'<div data-alert class="alert-box alert">'+
-	 						 'Bad request: No file attached.'+
+	 						 'Bad request: No file attached or no data in file.'+
 	  					 	 '<a href="#" class="close">&times;</a>'+
 					    '</div>'+
 					    '');
 						$(document).foundation('alert');
+						disableForm(false);
 				}
 			},
 			success: function(response) {

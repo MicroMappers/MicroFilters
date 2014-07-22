@@ -1,4 +1,5 @@
 import json, csv, time, urllib2, os, hashlib, re, logging
+from urllib2 import Request, urlopen, URLError
 from django.conf import settings
 from django.http import HttpResponse
 from django.core.cache import cache
@@ -25,11 +26,11 @@ def generateData(dataFile, app, appId, source, cacheKey):
 
 	updateCacheData(cacheKey, 'Processing', 50)
 	if extension == ".json":
-		processJSONInput(dataFile, app, appId, cacheKey)
+		final_response  = processJSONInput(dataFile, app, appId, cacheKey)
 	elif extension == ".csv":
-		processCSVInput(dataFile, app, appId, cacheKey)
+		final_response = processCSVInput(dataFile, app, appId, cacheKey)
 
-	return HttpResponse(status=200)
+	return final_response
 
 def processJSONInput(dataFile, app, appId, cacheKey):
 	jsonObject = json.loads(dataFile.read())
@@ -39,8 +40,10 @@ def processJSONInput(dataFile, app, appId, cacheKey):
 	line_limit = 1500
 	data = []
 	offset = ""
+	has_entries = False
 	
 	for index, row in enumerate(jsonObject):
+		has_entries = True
 		tweetData = parseTweet(row.get("id"), row.get("text"), row.get("user").get("screen_name"), row.get("created_at"), tweetIds, app)
 		if tweetData:
 			data.append(tweetData)
@@ -48,19 +51,23 @@ def processJSONInput(dataFile, app, appId, cacheKey):
 			lineModifier = lineModifier + 1
 			continue
 
-		updateCacheData(cacheKey, 'Writing Files', 75)
+	if not has_entries:
+		updateCacheData(cacheKey, 'Done', 100)
+		return HttpResponse(status=400)
 
-		if index-lineModifier == line_limit:
-			offset = "_"+str(line_limit/1500)
-			aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
-			line_limit += 1500
-			data = []
-			print "file written at", index
+	updateCacheData(cacheKey, 'Writing Files', 75)
+
+	if index-lineModifier == line_limit:
+		offset = "_" + str(line_limit/1500)
+		aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
+		line_limit += 1500
+		data = []
 
 	if offset:
 		offset = "_"+str(line_limit/1500)
 	aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
 	updateAIDR(aidr_json, cacheKey)
+	return HttpResponse(status=200)
 
 def processCSVInput(dataFile, app, appId, cacheKey):
 	csvDict = csv.DictReader(dataFile)
@@ -70,27 +77,33 @@ def processCSVInput(dataFile, app, appId, cacheKey):
 	aidr_json = []
 	lineModifier = 0
 	offset = ""
+	has_entries = False
 
 	for index, row in enumerate(csvDict):
+		has_entries = True
 		tweetData = parseTweet(row["tweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
 		if tweetData:
 			data.append(tweetData)
 		else:
 			lineModifier = lineModifier + 1
 			continue
+	if not has_entries:
+		updateCacheData(cacheKey, 'Error', 100)
+		return HttpResponse(status=400)
 
-		updateCacheData(cacheKey, 'Writing Files', 75)
+	updateCacheData(cacheKey, 'Writing Files', 75)
 
-		if index-lineModifier == line_limit:
-			offset = "_" + str(line_limit/1500)
-			aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
-			line_limit += 1500
-			data = []
+	if index-lineModifier == line_limit:
+		offset = "_" + str(line_limit/1500)
+		aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
+		line_limit += 1500
+		data = []
 
 	if offset:
 		offset = "_"+str((line_limit/1500))
 	aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
 	updateAIDR(aidr_json, cacheKey)
+	return HttpResponse(status=200)
 
 def updateAIDR(data, cacheKey):
 	updateCacheData(cacheKey, 'Updating AIDR', 90)
@@ -100,6 +113,7 @@ def updateAIDR(data, cacheKey):
 	try:
 		f = urllib2.urlopen(req, timeout=15)
 		response = f.read()
+		print 'AIDR Responded with:'
 		print response
 		f.close()
 		logger.info("Successfully sent file(s) information to AIDR API. Information sent: " + str(data))
@@ -158,9 +172,11 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 def checkForPhotos(message):
 	url = getActualURL(message)
 	if url:
-		photoPattern = re.compile("(https://(twitter\.com)\S*(photo)\S*)")
-		match = photoPattern.search(url)
-		if match:
+		photoPattern = re.compile("(http(s)?://(twitter\.com)\S*(photo)\S*)")
+		instagramPattern = re.compile("(http(s)?://(instagram\.com)\S*)")
+		match1 = photoPattern.search(url)
+		match2 = instagramPattern.search(url)
+		if match1 or match2:
 			return url
 	return None
 
@@ -178,7 +194,11 @@ def getActualURL(message):
 	match = pattern.search(message)
 	if match:
 		link = match.group()
-		return urllib2.urlopen(link).geturl()
+		try:
+			expandedUrl = urllib2.urlopen(link, timeout=20).geturl()
+			return expandedUrl
+		except Exception as e:
+			print e
 	return None
 
 def writeFile(data, app, appId, cacheKey, offset=""):
@@ -202,18 +222,23 @@ def updateCacheData(cacheKey, state, progress):
 
 def fetchFileFromURL(url, cacheKey):
 	cache.set(cacheKey, {
-            'state': 'uploading',
-            'progress': 25
-        })
-
-	response = urllib2.urlopen(url)
-	if response.headers.type == 'application/json':
-		return response, '.json'
-	elif response.headers.type == 'text/csv':
-		return response, '.csv' 
-	else:
-		logger.error("Failed attempting to get file from url: " + url + ". Incorrect response type.")
-		return 'error', 'error'
+        'state': 'Uploading',
+        'progress': 25
+    })
+	req = Request(url)
+	try:
+		response = urllib2.urlopen(url)
+		if response.headers.type == 'application/json':
+			return response, '.json'
+		elif response.headers.type == 'text/csv':
+			return response, '.csv'
+		elif response.headers.type == 'application/octet-stream' and url[-4:] == 'json':
+			return response.read(), '.json'
+		elif response.headers.type == 'application/octet-stream' and url[-3:] == 'csv':
+			return response, '.csv'
+	except Exception as e:
+		logger.error("Failed attempting to get file from url: " + url + ". Error was " + e)
+	return 'error', 'error'
 
 def getFileExtension(dataFile):
 		dataFileName, extension = os.path.splitext(dataFile.name)

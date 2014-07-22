@@ -5,6 +5,7 @@
 .header h1 {
 	color: white;
 	font-size: 2.15rem;
+	margin: 0 15px 10px 15px;
 }
 .header img {
 	margin: 5px 10px 5px 0;
@@ -33,7 +34,7 @@ li {
 }
 
 button {
-	background-color: #4190c2 !important;
+	background-color: #00a79d !important;
 }
 
 #app-list {

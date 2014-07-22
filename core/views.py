@@ -12,7 +12,6 @@ def index(request):
 def downloadPage(request):
 	if request.method == "POST":
 		cacheKey = "%s_%s" % (request.META['REMOTE_ADDR'], request.GET.get("X-Progress-ID") )
-		print request.POST.get('appID')
 		if request.FILES.get('data-file'):
 			return utils.generateData(request.FILES.get('data-file'), request.POST.get('app'), request.POST.get('appID'), "file", cacheKey)
 		elif request.POST.get("data-url"):
