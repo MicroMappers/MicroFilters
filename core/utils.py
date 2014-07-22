@@ -51,17 +51,17 @@ def processJSONInput(dataFile, app, appId, cacheKey):
 			lineModifier = lineModifier + 1
 			continue
 
+		updateCacheData(cacheKey, 'Writing Files', 75)
+
+		if index-lineModifier == line_limit:
+			offset = "_" + str(line_limit/1500)
+			aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
+			line_limit += 1500
+			data = []
+	
 	if not has_entries:
 		updateCacheData(cacheKey, 'Done', 100)
 		return HttpResponse(status=400)
-
-	updateCacheData(cacheKey, 'Writing Files', 75)
-
-	if index-lineModifier == line_limit:
-		offset = "_" + str(line_limit/1500)
-		aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
-		line_limit += 1500
-		data = []
 
 	if offset:
 		offset = "_"+str(line_limit/1500)
@@ -87,17 +87,18 @@ def processCSVInput(dataFile, app, appId, cacheKey):
 		else:
 			lineModifier = lineModifier + 1
 			continue
+
+		updateCacheData(cacheKey, 'Writing Files', 75)
+
+		if index-lineModifier == line_limit:
+			offset = "_" + str(line_limit/1500)
+			aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
+			line_limit += 1500
+			data = []
+	
 	if not has_entries:
 		updateCacheData(cacheKey, 'Error', 100)
 		return HttpResponse(status=400)
-
-	updateCacheData(cacheKey, 'Writing Files', 75)
-
-	if index-lineModifier == line_limit:
-		offset = "_" + str(line_limit/1500)
-		aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
-		line_limit += 1500
-		data = []
 
 	if offset:
 		offset = "_"+str((line_limit/1500))
