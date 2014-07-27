@@ -60,8 +60,10 @@ $(document).ready(function() {
 					window.progressLevel = parseInt(data['progress']);
 				progressBar.css({ width: window.progressLevel+'%' });
 				progressBar.text(data['state']);
-				if (data['state'] == 'Done')
+				if (data['state'] == 'Done') {
 					window.clearInterval(window.checkProgress);
+		    		disableForm(false);	
+				}
 			});
         }
 
