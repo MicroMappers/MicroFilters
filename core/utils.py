@@ -165,7 +165,7 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 			try:
 				datarow["Time-stamp"] = time.strftime("%Y-%m-%d %H:%M:%S" ,time.strptime(creationTime, "%a %b %d %H:%M:%S +0000 %Y"))
 			except Exception as e:
-				logger.error("Failed to parse time of tweet: " + e + ". Original data was: " + creationTime)
+				logger.error("Failed to parse time of tweet: " + str(e) + ". Original data was: " + str(creationTime))
 
 	tweetIds.append(tweetID)
 	return datarow
