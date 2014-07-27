@@ -206,10 +206,13 @@ def writeFile(data, app, appId, cacheKey, offset=""):
 	filename = app+time.strftime("%Y%m%d%H%M%S",time.localtime())+offset+'.csv'
 	outputfile = open("static/output/"+filename, "w")
 
-	writer = csv.DictWriter(outputfile, ["User-Name","Tweet","Time-stamp","Location","Latitude","Longitude","Image-link","TweetID"])
+	writer = csv.DictWriter(outputfile, ["User-Name","Tweet","Time-stamp","Location","Latitude","Longitude","Image-Link","TweetID"])
 	writer.writeheader()
 	for row in data:
-		writer.writerow(row)
+		try:
+			writer.writerow(row)
+		except Exception as e:
+			print e
 
 	outputfile.close()
 	logger.info("Successfully wrote file. Name: " + filename)
