@@ -51,4 +51,4 @@ def uploadProgress(request, uuid=None):
 		return HttpResponse(json.dumps(data))
 	if Progress < 50:
 		Progress += 1
-	return HttpResponse(json.dumps({"progress": Progress, "received": 0, "size": 0, "state": "Uploading"}))
+	return HttpResponse(json.dumps({"progress": Progress, "received": 0, "size": 0, "state": "Processing"}))
