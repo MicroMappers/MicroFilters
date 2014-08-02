@@ -216,7 +216,7 @@ def writeFile(data, app, appId, cacheKey, offset=""):
 
 	outputfile.close()
 	logger.info("Successfully wrote file. Name: " + filename)
-	return { "fileURL": str(settings.SITE_URL + "static/output/" + filename), "appID":  appId }
+	return { "fileURL": str(settings.SITE_URL + "static/output/" + filename), "appID":  int(appId) }
 
 def updateCacheData(cacheKey, state, progress):
 	cacheData = cache.get(cacheKey)
