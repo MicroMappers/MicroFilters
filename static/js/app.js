@@ -22,7 +22,7 @@ $(document).ready(function() {
 	//post the form via ajax
 	$("form#main-form").submit(function(event) {
 		event.preventDefault();
-		if ($("#app-list option:selected").attr("value") == 'none') {
+		if ($("#app-list option:selected").attr("value") == undefined) {
 			$("#message-box").html(''+
 				'<div data-alert class="alert-box alert">'+
 					 'You have to select an app type'+

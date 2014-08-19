@@ -196,14 +196,14 @@ def getActualURL(message):
 	if match:
 		link = match.group()
 		try:
-			expandedUrl = urllib2.urlopen(link, timeout=20).geturl()
+			expandedUrl = urllib2.urlopen(link, timeout=7).geturl()
 			return expandedUrl
 		except Exception as e:
 			print e
 	return None
 
 def writeFile(data, app, appId, cacheKey, offset=""):
-	filename = app+time.strftime("%Y%m%d%H%M%S",time.localtime())+offset+'.csv'
+	filename = app + time.strftime("%Y%m%d%H%M%S",time.localtime()) + offset + '.csv'
 	outputfile = open("static/output/"+filename, "w")
 
 	writer = csv.DictWriter(outputfile, ["User-Name","Tweet","Time-stamp","Location","Latitude","Longitude","Image-Link","TweetID"])
@@ -219,10 +219,13 @@ def writeFile(data, app, appId, cacheKey, offset=""):
 	return { "fileURL": str(settings.SITE_URL + "static/output/" + filename), "appID":  int(appId) }
 
 def updateCacheData(cacheKey, state, progress):
-	cacheData = cache.get(cacheKey)
-	cacheData['state'] = state
-	cacheData['progress'] = progress
-	cache.set(cacheKey, cacheData)
+	try:
+		cacheData = cache.get(cacheKey)
+		cacheData['state'] = state
+		cacheData['progress'] = progress
+		cache.set(cacheKey, cacheData)
+	except:
+		pass
 
 def fetchFileFromURL(url, cacheKey):
 	cache.set(cacheKey, {
