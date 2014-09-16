@@ -23,6 +23,12 @@ SECRET_KEY = '*2=%u9z8i1^hsqp@d7kp)!z#vd6psxqm13)gu@$5#p(9d0m)n+'
 DEBUG = True
 TEMPLATE_DEBUG = False
 
+# Celery settings
+BROKER_URL = 'amqp://guest@localhost//'
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+
 ALLOWED_HOSTS = ['*']
 
 # Application definition
