@@ -79,14 +79,26 @@ $(document).ready(function() {
 			processData: false,
 			statusCode: {
 				400: function() {
-						$("#message-box").html(''+
+					$("#message-box").html(''+
 	  					'<div data-alert class="alert-box alert">'+
 	 						 'Bad request: No file attached or no data in file.'+
 	  					 	 '<a href="#" class="close">&times;</a>'+
 					    '</div>'+
-					    '');
-						$(document).foundation('alert');
-						disableForm(false);
+				    '');
+					$(document).foundation('alert');
+					disableForm(false);
+				},
+				303: function(response) {
+					alert(response.responseText);
+					$("#message-box").html(''+
+						'<div data-alert class="alert-box warning">'+
+								'File is being processed. This may take some time, please check ' +
+								'<a href="' + response.responseText + '">here</a> for progress.' +
+						 		'<a href="#" class="close">&times;</a>'+
+					    '</div>'+
+				    '');
+				    $(document).foundation('warn');
+		    		disableForm(false);
 				}
 			},
 			success: function(response) {

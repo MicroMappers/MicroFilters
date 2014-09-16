@@ -3,6 +3,7 @@ from urllib2 import Request, urlopen, URLError
 from django.conf import settings
 from django.http import HttpResponse
 from django.core.cache import cache
+from celery import Celery
 from core.tasks import *
 from core.models import *
 
@@ -17,7 +18,9 @@ def generateData(dataFile, app, appId, source, cacheKey):
 		dataFile, extension = fetchFileFromURL(dataFile, cacheKey)
 		if dataFile == 'error':
 			return HttpResponse(status=400)
-	
+
+	if appId == 'undefined':
+		appId = 0 
 
 	#sha256_hash = str(hashfile(dataFile, hashlib.sha256()))
 	# if ProcessedFile.objects.filter(sha256_hash=sha256_hash).exists():
@@ -27,18 +30,14 @@ def generateData(dataFile, app, appId, source, cacheKey):
 
 	updateCacheData(cacheKey, 'Processing', 50)
 
-	if extension == ".json":
-		parsable_object  = json.loads(dataFile.read())
-	elif extension == ".csv":
-		parsable_object = csv.DictReader(dataFile)
-
 	if app == 'textclicker':
-		return processInput(parsable_object, extension, app, appId, cacheKey)
+		return processInput(dataFile, extension, app, appId, cacheKey)
 	else:
-		async_processInput.delay(dataFile, extension, app, appId, cacheKey)
-		return HttpResponse(status=200)
+		result = async_processInput.delay(dataFile, extension, app, appId, cacheKey)
+		# print result.debug_task()
+		return HttpResponse("/listFiles/" + result.id, status=303)
 
-def processInput(parsable_object, extension, app, appId, cacheKey):
+def processInput(dataFile, extension, app, appId, cacheKey):
 	tweetIds = []
 	aidr_json = []
 	lineModifier = 0
@@ -46,6 +45,11 @@ def processInput(parsable_object, extension, app, appId, cacheKey):
 	data = []
 	offset = ""
 	has_entries = False
+
+	if extension == ".json":
+		parsable_object  = json.loads(dataFile.read())
+	elif extension == ".csv":
+		parsable_object = csv.DictReader(dataFile)
 
 	for index, row in enumerate(parsable_object):
 		has_entries = True

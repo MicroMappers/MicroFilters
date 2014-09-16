@@ -1,5 +1,6 @@
 from __future__ import absolute_import
-from celery import shared_task
+from celery import shared_task, task, app, Task, current_task
+from celery.result import AsyncResult
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.http import HttpResponse
@@ -7,12 +8,14 @@ from django.core.cache import cache
 import zipfile, os, shutil, re, time, logging, json, csv, urllib2, hashlib
 from core.models import *
 
+from MicroFilters.celery import processing_progress
+
 logger = logging.getLogger(__name__)
 AIDRTRAINERAPI = "http://qcricl1linuxvm2.cloudapp.net:8081/AIDRTrainerAPI/rest/source/save"
+userNo = "1ef044a7-ba13-4ec6-867b-97a1fc06c7fd"
 
 @shared_task
 def async_processInput(dataFile, extension, app, appId, cacheKey):
-	logger.info("async processing")
 	tweetIds = []
 	aidr_json = []
 	lineModifier = 0
@@ -44,6 +47,9 @@ def async_processInput(dataFile, extension, app, appId, cacheKey):
 			aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
 			line_limit += 1500
 			data = []
+
+		current_task.update_state(state='PROGRESS', meta={'current': index, 'total': 3000})
+		print index
 	
 	if not has_entries:
 		updateCacheData(cacheKey, 'Error', 100)
