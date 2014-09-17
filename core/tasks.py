@@ -64,13 +64,16 @@ def parseRow(row, extension, tweetIds, app):
 	if extension == ".json":
 		return parseTweet(row.get("id"), row.get("text"), row.get("user").get("screen_name"), row.get("created_at"), tweetIds, app)
 	elif extension == ".csv":
-		return parseTweet(row["tweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
+		try:
+			return parseTweet(row["tweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
+		except: 
+			return parseTweet(row["TweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
 
 def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 	datarow = {}
 
 	if tweetID:
-		if tweetID in tweetIds:
+		if tweetID in tweetIds: # Ignore duplicates within the file
 			return None
 		datarow["TweetID"] = tweetID
 
