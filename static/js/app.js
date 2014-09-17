@@ -89,7 +89,6 @@ $(document).ready(function() {
 					disableForm(false);
 				},
 				303: function(response) {
-					alert(response.responseText);
 					$("#message-box").html(''+
 						'<div data-alert class="alert-box warning">'+
 								'File is being processed. This may take some time, please check ' +

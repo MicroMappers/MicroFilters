@@ -1,0 +1,68 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class='header'>
+	<h1><img src="/static/img/mm_logo.png" height="62" width="62" alt=""/>MicroFilters</h1>
+</div>
+
+<div class="row main">
+	<div class="large-8 columns large-centered progressPage" id="message-box">
+		<div data-alert class="alert-box success">Success. Click the files below to download.</div>
+		<div data-alert class="alert-box alert">Oops, something went wrong. Please try again. If all else fails, try breaking the file into multiple files.</div>
+		<div data-alert class="alert-box warning progressBar">
+			{% if state.status == 'PROGRESS' and state.meta %}
+				{{ state.meta.current }} / {{ state.meta.total }} lines processed.
+			{% endif %}
+			Files added below as they are created.</div>
+		<div data-alert class="alert-box warning unknown">Working....</div>
+	</div>
+	<div class="large-10 columns large-centered">
+		<div class="row">
+			<div class="large-10 columns small-centered">
+				<div class='panel'>
+					<ul>
+					{% for file in files %}
+						<li><a href="{{file.url}}">{{ file.name }}</a></li>
+					{% endfor %}
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="footer"></div>
+<script type='text/javascript'>
+	$(document).ready(function() {
+		{% if state.status == 'SUCCESS' %}
+			$("#message-box .success").show();
+		{% elif state.status == 'FAILURE' or state.status == 'False' %}
+			$("#message-box .alert").show();
+		{% elif state.status == 'PROGRESS' %}
+			$("#message-box .progress").show();
+		{% else %}
+			$("#message-box .unknown").show();
+		{% endif %}
+		window.checkProgress = window.setInterval(updateProgress, 1000);
+	});
+
+	function updateProgress() {
+		$.getJSON("/progress_json/{{ taskId }}", function (data) {
+			$("#message-box div").hide();
+			if (data.state.status == 'SUCCESS') {
+				window.clearInterval(window.checkProgress);
+				$("#message-box .success").show();
+			} else if (data.state.status == 'FAILURE' || data.state.status == 'False') {
+				$("#message-box .alert").show();
+			} else if (data.state.status == 'PROGRESS') {
+				$("#message-box .progressBar")
+					.show()
+					.html(data.state.meta.current + " / " + data.state.meta.total + " lines processed." +
+						" Files added below as they are created.");
+			} else {
+				$("#message-box .unknown").show();
+			}
+		});
+	}
+</script>
+{% endblock %}

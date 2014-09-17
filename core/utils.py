@@ -34,8 +34,7 @@ def generateData(dataFile, app, appId, source, cacheKey):
 		return processInput(dataFile, extension, app, appId, cacheKey)
 	else:
 		result = async_processInput.delay(dataFile, extension, app, appId, cacheKey)
-		# print result.debug_task()
-		return HttpResponse("/listFiles/" + result.id, status=303)
+		return HttpResponse("/progress/" + result.id, status=303)
 
 def processInput(dataFile, extension, app, appId, cacheKey):
 	tweetIds = []
@@ -110,7 +109,3 @@ def hashfile(afile, hasher, blocksize=65536):
 		hasher.update(buf)
 		buf = afile.read(blocksize)
 	return hasher.hexdigest()
-
-def getCSVRowCount(csvDict):
-	rows = list(csvDict)
-	return len(rows)

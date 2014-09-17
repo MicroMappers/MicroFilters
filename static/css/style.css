@@ -64,6 +64,10 @@ button {
 #message-box {
 	padding: 0 !important;
 }
+#message-box.progressPage div {
+	display: none;
+}
+
 .meter {
 	height: 43px;
 	padding: 0.875rem 1.5rem 0.875rem 0.875rem;

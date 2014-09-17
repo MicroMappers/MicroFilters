@@ -8,11 +8,8 @@ from django.core.cache import cache
 import zipfile, os, shutil, re, time, logging, json, csv, urllib2, hashlib
 from core.models import *
 
-from MicroFilters.celery import processing_progress
-
 logger = logging.getLogger(__name__)
 AIDRTRAINERAPI = "http://qcricl1linuxvm2.cloudapp.net:8081/AIDRTrainerAPI/rest/source/save"
-userNo = "1ef044a7-ba13-4ec6-867b-97a1fc06c7fd"
 
 @shared_task
 def async_processInput(dataFile, extension, app, appId, cacheKey):
@@ -24,10 +21,15 @@ def async_processInput(dataFile, extension, app, appId, cacheKey):
 	offset = ""
 	has_entries = False
 
+	print 'hello there'
+	print async_processInput.request.id
+
 	if extension == '.csv':
-		parsable_object = csv.DictReader(dataFile)
+		parsable_object = list(csv.DictReader(dataFile))
+		total_lines = len(parsable_object)
 	else:
 		parsable_object = json.loads(dataFile.read())
+		total_lines = len(parsable_object)
 
 	for index, row in enumerate(parsable_object):
 		has_entries = True
@@ -48,8 +50,7 @@ def async_processInput(dataFile, extension, app, appId, cacheKey):
 			line_limit += 1500
 			data = []
 
-		current_task.update_state(state='PROGRESS', meta={'current': index, 'total': 3000})
-		print index
+		current_task.update_state(state='PROGRESS', meta={'current': index, 'total': total_lines})
 	
 	if not has_entries:
 		updateCacheData(cacheKey, 'Error', 100)
@@ -147,9 +148,9 @@ def getActualURL(message):
 			print e
 	return None
 
-def writeFile(data, app, appId, cacheKey, offset=""):
+def writeFile(data, app, appId, cacheKey, offset="", taskId=""):
 	filename = app + time.strftime("%Y%m%d%H%M%S", time.localtime()) + offset + '.csv'
-	outputfile = open("static/output/"+filename, "w")
+	outputfile = open("static/output/" + taskId + filename, "w")
 
 	writer = csv.DictWriter(outputfile, ["User-Name","Tweet","Time-stamp","Location","Latitude","Longitude","Image-Link","TweetID"])
 	writer.writeheader()
