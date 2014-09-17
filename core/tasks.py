@@ -20,9 +20,7 @@ def async_processInput(dataFile, extension, app, appId, cacheKey):
 	data = []
 	offset = ""
 	has_entries = False
-
-	print 'hello there'
-	print async_processInput.request.id
+	taskId = str(async_processInput.request.id) + "/"
 
 	if extension == '.csv':
 		parsable_object = list(csv.DictReader(dataFile))
@@ -46,7 +44,7 @@ def async_processInput(dataFile, extension, app, appId, cacheKey):
 
 		if index-lineModifier == line_limit:
 			offset = "_" + str(line_limit/1500)
-			aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
+			aidr_json.append(writeFile(data, app, appId, cacheKey, offset, taskId))
 			line_limit += 1500
 			data = []
 
@@ -58,7 +56,7 @@ def async_processInput(dataFile, extension, app, appId, cacheKey):
 
 	if offset:
 		offset = "_"+str(line_limit/1500)
-	aidr_json.append(writeFile(data, app, appId, cacheKey, offset))
+	aidr_json.append(writeFile(data, app, appId, cacheKey, offset, taskId))
 	updateAIDR(aidr_json, cacheKey)
 	return HttpResponse(status=200)
 
@@ -149,9 +147,11 @@ def getActualURL(message):
 	return None
 
 def writeFile(data, app, appId, cacheKey, offset="", taskId=""):
+	if not os.path.exists("static/output/" + taskId):
+		os.makedirs("static/output/" + taskId)
+
 	filename = app + time.strftime("%Y%m%d%H%M%S", time.localtime()) + offset + '.csv'
 	outputfile = open("static/output/" + taskId + filename, "w")
-
 	writer = csv.DictWriter(outputfile, ["User-Name","Tweet","Time-stamp","Location","Latitude","Longitude","Image-Link","TweetID"])
 	writer.writeheader()
 	for row in data:
@@ -162,7 +162,7 @@ def writeFile(data, app, appId, cacheKey, offset="", taskId=""):
 
 	outputfile.close()
 	logger.info("Successfully wrote file. Name: " + filename)
-	return { "fileURL": str(settings.SITE_URL + "static/output/" + filename), "appID":  int(appId) }
+	return { "fileURL": str(settings.SITE_URL + "static/output/" + taskId + filename), "appID":  int(appId) }
 
 def updateAIDR(data, cacheKey):
 	updateCacheData(cacheKey, 'Updating AIDR', 90)

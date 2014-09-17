@@ -32,12 +32,17 @@ def getAsyncProgress(request, taskId=""):
 	return HttpResponse(response, status=200, content_type="application/json")
 
 def getFileList(taskId=""):
+	if taskId:
+		taskId = str(taskId) + "/"
 	files = []
 	top_path = os.path.dirname(os.path.abspath(__file__))
-	path = os.path.join(top_path, '../static/output')
-	os.chdir(path)
-	for clicker_file in os.listdir("."):
-		files.append({'name': clicker_file, 'url': '/static/output/' + taskId + '/' + clicker_file})
+	try:
+		path = os.path.join(top_path, '../static/output/' + taskId)
+		os.chdir(path)
+		for clicker_file in os.listdir("."):
+			files.append({'name': clicker_file, 'url': '/static/output/' + taskId + clicker_file})
+	except:
+		pass
 
 	return files
 
