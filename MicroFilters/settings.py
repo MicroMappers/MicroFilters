@@ -73,13 +73,6 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-#Python Social Auth settings
-AUTHENTICATION_BACKENDS = (
-    'social.backends.twitter.TwitterOAuth',
-)
-SOCIAL_AUTH_TWITTER_KEY = 'fl3lIOuMV1PJX83AbJn7cahyt'
-SOCIAL_AUTH_TWITTER_SECRET = 'ytffnr2XbUV3l9jeI7Eajzok0RwU4OBggtroFdEZh8JmFXfNu0'
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 STATIC_URL = '/static/'
