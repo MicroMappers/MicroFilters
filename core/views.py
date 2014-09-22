@@ -69,7 +69,7 @@ def getAppList(request):
 
 		return HttpResponse(responseString, status=200, content_type="application/json")
 	except:
-		appList = urllib2.urlopen("http://localhost:8000/static/fallback/applist.json")
+		appList = urllib2.urlopen("http://qcricl1linuxvm2.cloudapp.net:8090//static/fallback/applist.json")
 		return HttpResponse(appList.read(), status=200, content_type="application/json")
 
 

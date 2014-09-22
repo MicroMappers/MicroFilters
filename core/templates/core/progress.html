@@ -52,6 +52,10 @@
 			if (data.state.status == 'SUCCESS') {
 				window.clearInterval(window.checkProgress);
 				$("#message-box .success").show();
+				$("#file-list li").remove();
+				$.each(data.files, function(index, value) {
+					$("#file-list").append("<li><a href=" + value.url + ">" + value.name + "</a></li>");
+				});
 			} else if (data.state.status == 'FAILURE' || data.state.status == 'False') {
 				$("#message-box .alert").show();
 			} else if (data.state.status == 'PROGRESS') {
