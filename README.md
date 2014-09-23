@@ -1,3 +1,7 @@
+============
+MicroFilters
+============
+
 MicroFilters is a web application that generates data for MicroMappers from  AIDR Collection data.
 
 # Setup
@@ -30,4 +34,6 @@ Then run MicroFilters:
 Make sure a Celery worker is running, you can use supervisord for that.
 
 Deploy using Nginx with Gunicorm.
+
+
 
