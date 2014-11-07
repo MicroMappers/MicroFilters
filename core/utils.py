@@ -33,8 +33,19 @@ def generateData(dataFile, app, appId, source, cacheKey):
 	if app == 'textclicker':
 		return processInput(dataFile, extension, app, appId, cacheKey)
 	else:
-		result = async_processInput.delay(dataFile, extension, app, appId, cacheKey)
+		localFile = saveFile(dataFile, extension, cacheKey)
+		result = async_processInput.delay(localFile, extension, app, appId, cacheKey)
 		return HttpResponse("/progress/" + result.id, status=303)
+
+def saveFile(dataFile, extension, fileName):
+	if not os.path.exists("static/input/"):
+		os.makedirs("static/input/")
+	savedFileName = 'static/input/' + fileName + extension
+	with open(savedFileName, 'wb+') as destination:
+		for chunk in dataFile.chunks():
+			destination.write(chunk)
+		destination.close()
+	return savedFileName
 
 def processInput(dataFile, extension, app, appId, cacheKey):
 	tweetIds = []
