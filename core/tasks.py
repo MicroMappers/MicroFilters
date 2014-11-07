@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 AIDRTRAINERAPI = "http://qcricl1linuxvm2.cloudapp.net:8081/AIDRTrainerAPI/rest/source/save"
 
 @shared_task
-def async_processInput(dataFile, extension, app, appId, cacheKey):
+def async_processInput(localFile, extension, app, appId, cacheKey):
+	appId = 10;
 	tweetIds = []
 	aidr_json = []
 	lineModifier = 0
@@ -21,6 +22,7 @@ def async_processInput(dataFile, extension, app, appId, cacheKey):
 	offset = ""
 	has_entries = False
 	taskId = str(async_processInput.request.id) + "/"
+	dataFile = File(open(localFile, 'wb+'))
 
 	if extension == '.csv':
 		parsable_object = list(csv.DictReader(dataFile))
@@ -58,6 +60,7 @@ def async_processInput(dataFile, extension, app, appId, cacheKey):
 		offset = "_"+str(line_limit/1500)
 	aidr_json.append(writeFile(data, app, appId, cacheKey, offset, taskId))
 	updateAIDR(aidr_json, cacheKey)
+	dataFile.delete()
 	return HttpResponse(status=200)
 
 def parseRow(row, extension, tweetIds, app):
@@ -66,8 +69,11 @@ def parseRow(row, extension, tweetIds, app):
 	elif extension == ".csv":
 		try:
 			return parseTweet(row["tweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
-		except: 
-			return parseTweet(row["TweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
+		except:
+			try:
+				return parseTweet(row["TweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
+			except:
+				return None
 
 def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 	datarow = {}
