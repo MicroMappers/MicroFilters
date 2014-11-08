@@ -75,7 +75,7 @@ def parseRow(row, extension, tweetIds, app):
 		print 'rowing'
 		try:
 			return parseTweet(row["tweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
-		except:
+		except: 
 			try:
 				return parseTweet(row["TweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
 			except:
