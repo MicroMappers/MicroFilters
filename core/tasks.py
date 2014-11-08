@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from django.http import HttpResponse
 from django.core.cache import cache
+from django.core.files import File
 import zipfile, os, shutil, re, time, logging, json, csv, urllib2, hashlib
 from core.models import *
 
@@ -22,11 +23,12 @@ def async_processInput(localFile, extension, app, appId, cacheKey):
 	offset = ""
 	has_entries = False
 	taskId = str(async_processInput.request.id) + "/"
-	dataFile = File(open(localFile, 'wb+'))
+	dataFile = open(os.path.abspath(localFile), 'r')
 
 	if extension == '.csv':
 		parsable_object = list(csv.DictReader(dataFile))
 		total_lines = len(parsable_object)
+		print parsable_object
 	else:
 		parsable_object = json.loads(dataFile.read())
 		total_lines = len(parsable_object)
@@ -56,17 +58,21 @@ def async_processInput(localFile, extension, app, appId, cacheKey):
 		updateCacheData(cacheKey, 'Error', 100)
 		return HttpResponse(status=400)
 
+	print "nearly done"
+
 	if offset:
 		offset = "_"+str(line_limit/1500)
 	aidr_json.append(writeFile(data, app, appId, cacheKey, offset, taskId))
 	updateAIDR(aidr_json, cacheKey)
-	dataFile.delete()
+	dataFile.close()
+	os.remove(os.path.abspath(localFile))
 	return HttpResponse(status=200)
 
 def parseRow(row, extension, tweetIds, app):
 	if extension == ".json":
 		return parseTweet(row.get("id"), row.get("text"), row.get("user").get("screen_name"), row.get("created_at"), tweetIds, app)
 	elif extension == ".csv":
+		print 'rowing'
 		try:
 			return parseTweet(row["tweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
 		except:
