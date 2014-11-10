@@ -34,7 +34,7 @@ def generateData(dataFile, app, appId, source, cacheKey):
 		return processInput(dataFile, extension, app, appId, cacheKey)
 	else:
 		localFile = saveFile(dataFile, extension, cacheKey)
-		result = async_processInput.delay(localFile, extension, app, appId, cacheKey)
+		result = async_processInput.apply_async((localFile, extension, app, appId, cacheKey), countdown=10)
 		return HttpResponse("/progress/" + result.id, status=303)
 
 def saveFile(dataFile, extension, fileName):
