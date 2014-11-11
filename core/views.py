@@ -21,7 +21,7 @@ def downloadPage(request):
 			return HttpResponse(status=400)
 	else:
 		return 	HttpResponse(status=405)
-
+#shit starts happening when you get to this page
 def getAsyncProcessPage(request, taskId=""):
 	state = getState(taskId)
 	files = getFileList(taskId)
@@ -38,8 +38,8 @@ def getFileList(taskId=""):
 	top_path = os.path.dirname(os.path.abspath(__file__))
 	try:
 		path = os.path.join(top_path, '../static/output/' + taskId)
-		os.chdir(path)
-		for clicker_file in os.listdir("."):
+		#os.chdir(path)
+		for clicker_file in os.listdir(path):
 			files.append({'name': clicker_file, 'url': '/static/output/' + taskId + clicker_file})
 	except:
 		pass
