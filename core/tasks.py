@@ -101,10 +101,12 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 				logger.error("Failed to get tweet message:" + e)
 
 		if app == 'imageclicker':
-			mediaLink = checkForPhotos(message)
-			if mediaLink:
-				datarow["Location"] = mediaLink
-				datarow["Image-Link"] = mediaLink
+			page = checkForPhotos(message)
+			if page.geturl():
+				datarow["Location"] = page.geturl()
+				imgLink = getImageLink(page.read(), page.geturl())
+				if imgLink:
+					datarow["Image-Link"] = imgLink
 			else:
 				return None
 		elif app == 'videoclicker':
@@ -130,18 +132,40 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 	return datarow
 
 def checkForPhotos(message):
-	url = getActualURL(message)
+	page = getActualURL(message)
+	url = page.geturl()
 	if url:
 		photoPattern = re.compile("(http(s)?://(twitter\.com)\S*(photo)\S*)")
 		instagramPattern = re.compile("(http(s)?://(instagram\.com)\S*)")
 		match1 = photoPattern.search(url)
 		match2 = instagramPattern.search(url)
 		if match1 or match2:
-			return url
+			return page
+	return None
+
+def getImageLink(content, url):
+	photoPattern = re.compile("(http(s)?://(twitter\.com)\S*(photo)\S*)")
+	instagramPattern = re.compile("(http(s)?://(instagram\.com)\S*)")
+	if photoPattern.search(url):
+		pattern = re.compile(r'img src=\"[^ ]*\"')
+		imgUrls = re.findall(pattern, content)
+		if len(imgUrls) > 0:
+		    imgUrl = imgUrls[0]
+		    imgUrl = imgUrl.replace("img src=","").replace('"','')
+		    print imgUrl
+		    return imgUrl
+	elif instagramPattern.search(url):
+		pattern = re.compile(r'display_src\":\"[^ \"]*')
+		imgUrls = re.findall(pattern, content)
+		if len(imgUrls) > 0:
+		    imgUrl = imgUrls[0]
+		    imgUrl = imgUrl.replace('"','').replace('\\','').replace('display_src:','')
+		    print imgUrl
+		    return imgUrl
 	return None
 
 def checkForYoutube(message):
-	url = getActualURL(message)
+	url = getActualURL(message).geturl()
 	if url:
 		youtubePattern = re.compile("(http(s)?://(www\.youtube\.com)\S*)")
 		match = youtubePattern.search(url)
@@ -155,7 +179,7 @@ def getActualURL(message):
 	if match:
 		link = match.group()
 		try:
-			expandedUrl = urllib2.urlopen(link, timeout=7).geturl()
+			expandedUrl = urllib2.urlopen(link, timeout=7)
 			return expandedUrl
 		except Exception as e:
 			print e
