@@ -14,7 +14,6 @@ AIDRTRAINERAPI = "http://qcricl1linuxvm2.cloudapp.net:8081/AIDRTrainerAPI/rest/s
 
 @shared_task
 def async_processInput(localFile, extension, app, appId, cacheKey):
-	appId = 10;
 	tweetIds = []
 	aidr_json = []
 	lineModifier = 0
