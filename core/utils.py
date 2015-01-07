@@ -38,12 +38,17 @@ def generateData(dataFile, app, appId, source, cacheKey):
 		return HttpResponse("/progress/" + result.id, status=303)
 
 def saveFile(dataFile, extension, fileName):
+	CHUNK = 16 * 1024
 	if not os.path.exists("static/input/"):
 		os.makedirs("static/input/")
 	savedFileName = 'static/input/' + fileName + extension
 	with open(savedFileName, 'wb+') as destination:
-		for chunk in dataFile.chunks():
+		while True:
+			chunk = dataFile.read(CHUNK)
+			if not chunk: break
 			destination.write(chunk)
+		# for chunk in dataFile.chunks():
+		# 	destination.write(chunk)
 		destination.close()
 	return savedFileName
 

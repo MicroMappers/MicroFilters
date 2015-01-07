@@ -27,7 +27,7 @@ def async_processInput(localFile, extension, app, appId, cacheKey):
 	if extension == '.csv':
 		parsable_object = list(csv.DictReader(dataFile))
 		total_lines = len(parsable_object)
-		print parsable_object
+		#print parsable_object
 	else:
 		parsable_object = json.loads(dataFile.read())
 		total_lines = len(parsable_object)
@@ -69,9 +69,12 @@ def async_processInput(localFile, extension, app, appId, cacheKey):
 
 def parseRow(row, extension, tweetIds, app):
 	if extension == ".json":
-		return parseTweet(row.get("id"), row.get("text"), row.get("user").get("screen_name"), row.get("created_at"), tweetIds, app)
+		try:
+			return parseTweet(row.get("id"), row.get("text"), row.get("user").get("screen_name"), row.get("created_at"), tweetIds, app)
+		except:
+			return None
 	elif extension == ".csv":
-		print 'rowing'
+		#print 'rowing'
 		try:
 			return parseTweet(row["tweetID"], row["message"].decode("utf-8"), row["userName"], row["createdAt"], tweetIds, app)
 		except: 
@@ -151,7 +154,7 @@ def getImageLink(content, url):
 		if len(imgUrls) > 0:
 		    imgUrl = imgUrls[0]
 		    imgUrl = imgUrl.replace("img src=","").replace('"','')
-		    print imgUrl
+		    #print imgUrl
 		    return imgUrl
 	elif instagramPattern.search(url):
 		pattern = re.compile(r'display_src\":\"[^ \"]*')
@@ -159,7 +162,7 @@ def getImageLink(content, url):
 		if len(imgUrls) > 0:
 		    imgUrl = imgUrls[0]
 		    imgUrl = imgUrl.replace('"','').replace('\\','').replace('display_src:','')
-		    print imgUrl
+		    #print imgUrl
 		    return imgUrl
 	return None
 

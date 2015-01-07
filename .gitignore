@@ -61,3 +61,6 @@ docs/_build/
 
 #output folder
 static/output
+
+#input folder 
+static/input
