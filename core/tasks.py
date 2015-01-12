@@ -6,7 +6,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.core.cache import cache
 from django.core.files import File
-import zipfile, os, shutil, re, time, logging, json, csv, urllib2, hashlib
+import zipfile, os, shutil, re, time, logging, json, csv, urllib2, hashlib, urlparse
 from core.models import *
 
 logger = logging.getLogger(__name__)
@@ -105,9 +105,9 @@ def parseTweet(tweetID, message, userName, creationTime, tweetIds, app):
 		if app == 'imageclicker':
 			page = checkForPhotos(message)
 			if page.geturl():
-				datarow["Location"] = page.geturl()
 				imgLink = getImageLink(page.read(), page.geturl())
 				if imgLink:
+					datarow["Location"] = imgLink
 					datarow["Image-Link"] = imgLink
 			else:
 				return None
@@ -172,7 +172,9 @@ def checkForYoutube(message):
 		youtubePattern = re.compile("(http(s)?://(www\.youtube\.com)\S*)")
 		match = youtubePattern.search(url)
 		if match:
-			return url
+			urldata = urlparse.urlparse(url)
+			query = urlparse.parse_qs(urldata.query)
+			return query['v'][0]
 	return None
 
 def getActualURL(message):
