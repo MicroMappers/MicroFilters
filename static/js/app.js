@@ -40,6 +40,15 @@ $(document).ready(function() {
 			'');
 			$(document).foundation('alert');
 			return false;
+		} else if (document.getElementById('data-file').value != '' && document.getElementById('data-url').value != ''){
+			$("#message-box").html(''+
+				'<div data-alert class="alert-box alert">'+
+					 'Bad request: You can only submit one data source.'+
+				 	 '<a href="#" class="close">&times;</a>'+
+		    '</div>'+
+			'');
+			$(document).foundation('alert');
+			return false;
 		}
 
   		var formData = new FormData($(this)[0]);
@@ -78,10 +87,15 @@ $(document).ready(function() {
 			contentType: false,
 			processData: false,
 			statusCode: {
-				400: function() {
+				400: function(xhr) {
+					if(xhr.responseText){ 
+						errorText = xhr.responseText; 
+					} else { 
+						errorText = 'Bad request: No file attached or no data in file.'; 
+					}
 					$("#message-box").html(''+
 	  					'<div data-alert class="alert-box alert">'+
-	 						 'Bad request: No file attached or no data in file.'+
+	 						 errorText+
 	  					 	 '<a href="#" class="close">&times;</a>'+
 					    '</div>'+
 				    '');

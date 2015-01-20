@@ -1,7 +1,7 @@
 import json, csv, time, urllib2, os, hashlib, re, logging
 from urllib2 import Request, urlopen, URLError
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.core.cache import cache
 from celery import Celery
 from core.tasks import *
@@ -17,7 +17,11 @@ def generateData(dataFile, app, appId, source, cacheKey):
 		logger.info("fetching remote AIDR file: " + dataFile)
 		dataFile, extension = fetchFileFromURL(dataFile, cacheKey)
 		if dataFile == 'error':
-			return HttpResponse(status=400)
+			return HttpResponseBadRequest("Malformed URL.")
+
+	#Bad file import
+	if extension != '.csv' and extension != '.json':
+		return HttpResponseBadRequest("Bad file extension.")
 
 	if appId == 'undefined':
 		appId = 0 
