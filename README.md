@@ -28,11 +28,11 @@ All the necessary configuration files for Django and Celery are included in this
 
 For Celery:
 
-`BROKER_URL = 'amqp://guest@localhost//'
-CELERY_RESULT_BACKEND = 'amqp'
-CELERY_ACCEPT_CONTENT = ['pickle']
-CELERY_TASK_SERIALIZER = 'pickle'
-CELERY_RESULT_SERIALIZER = 'pickle'`
+    BROKER_URL = 'amqp://guest@localhost//'
+    CELERY_RESULT_BACKEND = 'amqp'
+    CELERY_ACCEPT_CONTENT = ['pickle']
+    CELERY_TASK_SERIALIZER = 'pickle'
+    CELERY_RESULT_SERIALIZER = 'pickle'
 
 Disable CORS:
 
