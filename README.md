@@ -22,7 +22,7 @@ Celery and RabbitMQ are used to process files asyncrounously. This allows the us
 
 # Setup
 
-All the necessary configuration files for Django and Celery are included in this repo in the MicroFilters directory. Beyond the normal django config settings, the following need to be added to settings.py:
+All the necessary configuration files for Django and Celery are included in this repo in the MicroFilters directory. No database is necessary. Beyond the normal django config settings, the following need to be added to settings.py:
 
 `FILE_UPLOAD_HANDLERS = ('core.uploadhandler.UploadProgressCachedHandler', "django.core.files.uploadhandler.MemoryFileUploadHandler","django.core.files.uploadhandler.TemporaryFileUploadHandler",)`
 
