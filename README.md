@@ -2,7 +2,7 @@
 MicroFilters
 ============
 
-MicroFilters is a web application that generates data for MicroMappers from  AIDR Collection data. The collection data can be found http://aidr.qcri.org
+MicroFilters is a web application that generates data for MicroMappers from  AIDR Collection data. The collection data can be found via http://aidr.qcri.org
 
 # Pre-Requisites
 
