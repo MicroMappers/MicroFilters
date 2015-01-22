@@ -29,9 +29,13 @@ FILE_UPLOAD_HANDLERS = ('core.uploadhandler.UploadProgressCachedHandler', "djang
 For Celery:
 
 BROKER_URL = 'amqp://guest@localhost//'
+
 CELERY_RESULT_BACKEND = 'amqp'
+
 CELERY_ACCEPT_CONTENT = ['pickle']
+
 CELERY_TASK_SERIALIZER = 'pickle'
+
 CELERY_RESULT_SERIALIZER = 'pickle'
 
 Disable CORS:
