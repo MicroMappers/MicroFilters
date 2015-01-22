@@ -24,23 +24,19 @@ Celery and RabbitMQ are used to process files asyncrounously. This allows the us
 
 All the necessary configuration files for Django and Celery are included in this repo in the MicroFilters directory. Beyond the normal django config settings, the following need to be added to settings.py:
 
-FILE_UPLOAD_HANDLERS = ('core.uploadhandler.UploadProgressCachedHandler', "django.core.files.uploadhandler.MemoryFileUploadHandler","django.core.files.uploadhandler.TemporaryFileUploadHandler",)
+`FILE_UPLOAD_HANDLERS = ('core.uploadhandler.UploadProgressCachedHandler', "django.core.files.uploadhandler.MemoryFileUploadHandler","django.core.files.uploadhandler.TemporaryFileUploadHandler",)`
 
 For Celery:
 
-BROKER_URL = 'amqp://guest@localhost//'
-
+`BROKER_URL = 'amqp://guest@localhost//'
 CELERY_RESULT_BACKEND = 'amqp'
-
 CELERY_ACCEPT_CONTENT = ['pickle']
-
 CELERY_TASK_SERIALIZER = 'pickle'
-
-CELERY_RESULT_SERIALIZER = 'pickle'
+CELERY_RESULT_SERIALIZER = 'pickle'`
 
 Disable CORS:
 
-ALLOWED_HOSTS = ['*']
+`ALLOWED_HOSTS = ['*']`
 
 
 # Running Locally
