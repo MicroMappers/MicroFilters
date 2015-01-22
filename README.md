@@ -22,7 +22,7 @@ Celery and RabbitMQ are used to process files asyncrounously. This allows the us
 
 # Setup
 
-All the necessary configuration files for Django and Celery are included in this repo in the MicroFilters directory. Beyond the normal django config settings, the following need to be added:
+All the necessary configuration files for Django and Celery are included in this repo in the MicroFilters directory. Beyond the normal django config settings, the following need to be added to settings.py:
 
 FILE_UPLOAD_HANDLERS = ('core.uploadhandler.UploadProgressCachedHandler', "django.core.files.uploadhandler.MemoryFileUploadHandler","django.core.files.uploadhandler.TemporaryFileUploadHandler",)
 
@@ -53,7 +53,9 @@ Then run MicroFilters:
 
 Make sure a Celery worker is running, we reccomend supervisord. See the Celery docs and http://supervisord.org/ to set this up. The easiest way to deploy is using Nginx with Gunicorn. See http://gunicorn.org/ 
 
-Default configuration files for all of these are included in the root directory of this repo.
+Default configuration files for all of these are included in the root directory of this repo for convenience.
+
+# Logging
 
 A log file named microfilters.log is created in the root directory of the project. It logs all processed files, whether successes or failures. It also logs whether AIDR was notified of the processed files (Sometimes it is not if AIDR is down at the time).
 
