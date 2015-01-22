@@ -4,7 +4,7 @@ MicroFilters
 
 MicroFilters is a web application that generates data for MicroMappers from  AIDR Collection data.
 
-# Prerequisites
+# Pre-Requisites
 
 You only need two python packages installed:
 
@@ -58,6 +58,8 @@ Default configuration files for all of these are included in the root directory 
 # Logging
 
 A log file named microfilters.log is created in the root directory of the project. It logs all processed files, whether successes or failures. It also logs whether AIDR was notified of the processed files (Sometimes it is not if AIDR is down at the time).
+
+# Q & A
 
 
 
